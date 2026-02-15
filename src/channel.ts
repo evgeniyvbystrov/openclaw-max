@@ -416,6 +416,110 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
       lastInboundAt: runtime?.lastInboundAt ?? null,
       lastOutboundAt: runtime?.lastOutboundAt ?? null,
     }),
+
+    auditAccount: async ({ account, timeoutMs }) => {
+      if (!account.token) {
+        return {
+          ok: false,
+          checkedGroups: 0,
+          unresolvedGroups: 0,
+          groups: [],
+          elapsedMs: 0,
+        };
+      }
+
+      const start = Date.now();
+      const groups = account.config.groups ?? {};
+      const groupIds = Object.keys(groups).filter((id) => id !== "*");
+
+      if (groupIds.length === 0) {
+        return {
+          ok: true,
+          checkedGroups: 0,
+          unresolvedGroups: 0,
+          groups: [],
+          elapsedMs: Date.now() - start,
+        };
+      }
+
+      const api = new MaxApi({ token: account.token, timeoutMs });
+      const results: Array<{
+        id: string;
+        ok: boolean;
+        title?: string;
+        error?: string;
+      }> = [];
+      let unresolvedCount = 0;
+
+      for (const groupId of groupIds) {
+        try {
+          const chat = await api.getChat(Number(groupId));
+          const isMember = chat.type === "chat" || chat.type === "channel";
+          if (!isMember) {
+            unresolvedCount++;
+            results.push({
+              id: groupId,
+              ok: false,
+              error: "Bot is not a member of this chat",
+            });
+          } else {
+            results.push({
+              id: groupId,
+              ok: true,
+              title: chat.title ?? undefined,
+            });
+          }
+        } catch (err) {
+          unresolvedCount++;
+          results.push({
+            id: groupId,
+            ok: false,
+            error: String(err),
+          });
+        }
+      }
+
+      return {
+        ok: unresolvedCount === 0,
+        checkedGroups: groupIds.length,
+        unresolvedGroups: unresolvedCount,
+        groups: results,
+        elapsedMs: Date.now() - start,
+      };
+    },
+
+    collectStatusIssues: ({ account, audit }) => {
+      const issues: Array<{
+        level: "error" | "warning" | "info";
+        message: string;
+      }> = [];
+
+      // Check token
+      if (!account.token) {
+        issues.push({
+          level: "error",
+          message: "MAX bot token not configured",
+        });
+      }
+
+      // Check audit results
+      if (audit && !audit.ok && audit.unresolvedGroups > 0) {
+        issues.push({
+          level: "warning",
+          message: `${audit.unresolvedGroups} of ${audit.checkedGroups} groups are not accessible`,
+        });
+      }
+
+      // Warn about webhook without secret
+      if (account.config.webhookUrl && !account.config.webhookSecret) {
+        issues.push({
+          level: "warning",
+          message: "Webhook URL configured without secret (webhookSecret recommended for security)",
+        });
+      }
+
+      return issues;
+    },
   },
 
   gateway: {
