@@ -133,6 +133,23 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
         normalizeEntry: (raw: string) => raw.replace(/^max:/i, ""),
       };
     },
+    collectWarnings: ({ account, cfg }) => {
+      const defaultGroupPolicy = cfg.channels?.defaults?.groupPolicy;
+      const groupPolicy = account.config.groupPolicy ?? defaultGroupPolicy ?? "allowlist";
+      if (groupPolicy !== "open") {
+        return [];
+      }
+      const groupAllowlistConfigured =
+        account.config.groups && Object.keys(account.config.groups).length > 0;
+      if (groupAllowlistConfigured) {
+        return [
+          `- MAX groups: groupPolicy="open" allows any member in allowed groups to trigger (mention-gated). Set channels.max.groupPolicy="allowlist" + channels.max.groupAllowFrom to restrict senders.`,
+        ];
+      }
+      return [
+        `- MAX groups: groupPolicy="open" with no channels.max.groups allowlist; any group can add + ping (mention-gated). Set channels.max.groupPolicy="allowlist" + channels.max.groupAllowFrom or configure channels.max.groups.`,
+      ];
+    },
   },
 
   groups: {
