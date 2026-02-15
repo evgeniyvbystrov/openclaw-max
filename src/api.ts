@@ -355,4 +355,77 @@ export class MaxApi {
   async getUploadUrl(type: "image" | "video" | "audio" | "file"): Promise<MaxUploadUrlResponse> {
     return this.request("POST", `/uploads`, { type });
   }
+
+  /**
+   * Upload media file to MAX.
+   * @param type Media type (image, video, audio, file)
+   * @param data File path (string) or buffer (Buffer/Uint8Array)
+   * @param contentType MIME type (optional, auto-detected for common types)
+   * @returns Upload result with URL
+   */
+  async uploadMedia(
+    type: "image" | "video" | "audio" | "file",
+    data: string | Buffer | Uint8Array,
+    contentType?: string,
+  ): Promise<{ url: string }> {
+    // Step 1: Get upload URL
+    const { url: uploadUrl } = await this.getUploadUrl(type);
+
+    // Step 2: Load file if data is a path
+    let fileBuffer: Buffer;
+    let mimeType = contentType;
+
+    if (typeof data === "string") {
+      // File path — read from disk
+      const fs = await import("fs/promises");
+      fileBuffer = await fs.readFile(data);
+      
+      // Auto-detect MIME type if not provided
+      if (!mimeType) {
+        const ext = data.split(".").pop()?.toLowerCase();
+        const mimeMap: Record<string, string> = {
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          gif: "image/gif",
+          webp: "image/webp",
+          mp4: "video/mp4",
+          mov: "video/quicktime",
+          avi: "video/x-msvideo",
+          mp3: "audio/mpeg",
+          wav: "audio/wav",
+          ogg: "audio/ogg",
+          pdf: "application/pdf",
+          txt: "text/plain",
+        };
+        mimeType = ext ? mimeMap[ext] : "application/octet-stream";
+      }
+    } else {
+      // Already a buffer
+      fileBuffer = Buffer.from(data);
+      mimeType = mimeType ?? "application/octet-stream";
+    }
+
+    // Step 3: POST file to upload URL
+    const uploadRes = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": mimeType,
+      },
+      body: fileBuffer,
+    });
+
+    if (!uploadRes.ok) {
+      throw new MaxApiError(
+        `MAX media upload failed: ${uploadRes.status}`,
+        uploadRes.status,
+        await uploadRes.text().catch(() => null),
+      );
+    }
+
+    // Step 4: Return the upload URL (or parse response if needed)
+    // MAX API docs say upload returns JSON with the final URL
+    const result = (await uploadRes.json().catch(() => ({ url: uploadUrl }))) as { url?: string };
+    return { url: result.url ?? uploadUrl };
+  }
 }

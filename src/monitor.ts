@@ -9,7 +9,7 @@ import type { ChannelLogSink, OpenClawConfig } from "openclaw/plugin-sdk";
 import { createReplyPrefixOptions } from "openclaw/plugin-sdk";
 import { MaxApi, type MaxUpdate, type MaxMessage, type MaxUser, type MaxCallback } from "./api.js";
 import { resolveMaxAccount, type ResolvedMaxAccount } from "./accounts.js";
-import { sendMaxMessage } from "./send.js";
+import { sendMaxMessage, sendMaxMediaMessage } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
 
 export interface MaxMonitorOptions {
@@ -411,7 +411,7 @@ async function deliverMaxReply(params: {
     }
   }
 
-  // Media URLs — send as text for now (upload support TODO)
+  // Media URLs — upload and send
   const mediaList = payload.mediaUrls?.length
     ? payload.mediaUrls
     : payload.mediaUrl
@@ -420,8 +420,34 @@ async function deliverMaxReply(params: {
 
   for (const mediaUrl of mediaList) {
     try {
-      await sendMaxMessage(chatId, mediaUrl, { token: account.token });
-      statusSink?.({ lastOutboundAt: Date.now() });
+      // Download media first if it's a URL
+      if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+        const maxBytes = (account.config.mediaMaxMb ?? 20) * 1024 * 1024;
+        const loaded = await core.channel.media.fetchRemoteMedia({ url: mediaUrl, maxBytes });
+        
+        // Write to temp file
+        const fs = await import("fs/promises");
+        const tmpPath = `/tmp/max-media-${Date.now()}-${loaded.fileName ?? "file"}`;
+        await fs.writeFile(tmpPath, loaded.buffer);
+        
+        try {
+          await sendMaxMediaMessage(chatId, "", tmpPath, {
+            token: account.token,
+            replyToMessageId: params.replyToId,
+          });
+          statusSink?.({ lastOutboundAt: Date.now() });
+        } finally {
+          // Cleanup temp file
+          await fs.unlink(tmpPath).catch(() => {});
+        }
+      } else {
+        // Local file path
+        await sendMaxMediaMessage(chatId, "", mediaUrl, {
+          token: account.token,
+          replyToMessageId: params.replyToId,
+        });
+        statusSink?.({ lastOutboundAt: Date.now() });
+      }
     } catch (err) {
       log?.error(`[${account.accountId}] MAX media send failed: ${String(err)}`);
     }

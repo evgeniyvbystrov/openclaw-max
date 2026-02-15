@@ -13,7 +13,7 @@ import {
   readStringParam,
 } from "openclaw/plugin-sdk";
 import { listMaxAccountIds, resolveMaxAccount } from "./accounts.js";
-import { sendMaxMessage, editMaxMessage, deleteMaxMessage } from "./send.js";
+import { sendMaxMessage, editMaxMessage, deleteMaxMessage, sendMaxMediaMessage } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
 
 const providerId = "max";
@@ -69,16 +69,39 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
       const replyTo = readStringParam(params, "replyTo");
 
       if (mediaUrl) {
-        // TODO: Upload media via api.getUploadUrl() + POST to upload URL
-        // For now, send media URL as text
+        // Upload media from URL or local path
         const core = getMaxRuntime();
-        const fullText = mediaUrl ? `${content}\n${mediaUrl}`.trim() : content;
-        const result = await sendMaxMessage(to, fullText, {
-          token: account.token,
-          replyToMessageId: replyTo ?? undefined,
-          format: "markdown",
-        });
-        return jsonResult({ ok: true, to, messageId: result.messageId });
+        
+        // Download if URL
+        if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+          const maxBytes = (account.config.mediaMaxMb ?? 20) * 1024 * 1024;
+          const loaded = await core.channel.media.fetchRemoteMedia({ url: mediaUrl, maxBytes });
+          
+          // Write to temp file
+          const fs = await import("fs/promises");
+          const tmpPath = `/tmp/max-media-${Date.now()}-${loaded.fileName ?? "file"}`;
+          await fs.writeFile(tmpPath, loaded.buffer);
+          
+          try {
+            const result = await sendMaxMediaMessage(to, content, tmpPath, {
+              token: account.token,
+              replyToMessageId: replyTo ?? undefined,
+              format: "markdown",
+            });
+            return jsonResult({ ok: true, to, messageId: result.messageId });
+          } finally {
+            // Cleanup
+            await fs.unlink(tmpPath).catch(() => {});
+          }
+        } else {
+          // Local file path
+          const result = await sendMaxMediaMessage(to, content, mediaUrl, {
+            token: account.token,
+            replyToMessageId: replyTo ?? undefined,
+            format: "markdown",
+          });
+          return jsonResult({ ok: true, to, messageId: result.messageId });
+        }
       }
 
       const result = await sendMaxMessage(to, content, {

@@ -129,3 +129,90 @@ export async function deleteMaxMessage(
 
   await api.deleteMessage(messageId);
 }
+
+/**
+ * Send a media message to MAX (with upload).
+ * @param to Chat ID or user ID
+ * @param caption Text caption
+ * @param mediaPath Local file path or URL
+ * @param opts Send options
+ */
+export async function sendMaxMediaMessage(
+  to: string,
+  caption: string,
+  mediaPath: string,
+  opts: MaxSendOptions = {},
+): Promise<{ messageId: string; raw: MaxSendResult }> {
+  const token = resolveToken(opts);
+  const api = new MaxApi({ token });
+
+  // Detect media type from path
+  const ext = mediaPath.split(".").pop()?.toLowerCase();
+  let mediaType: "image" | "video" | "audio" | "file" = "file";
+  if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext ?? "")) {
+    mediaType = "image";
+  } else if (["mp4", "mov", "avi"].includes(ext ?? "")) {
+    mediaType = "video";
+  } else if (["mp3", "wav", "ogg"].includes(ext ?? "")) {
+    mediaType = "audio";
+  }
+
+  // Upload media
+  const { url: mediaUrl } = await api.uploadMedia(mediaType, mediaPath);
+
+  // Build attachment
+  const attachments: MaxAttachment[] = [
+    {
+      type: mediaType,
+      payload: { url: mediaUrl },
+    },
+  ];
+
+  // Add inline keyboard if present
+  if (opts.buttons?.length) {
+    attachments.push({
+      type: "inline_keyboard",
+      payload: {
+        buttons: opts.buttons.map((row) =>
+          row.map((btn) => {
+            if (btn.url) {
+              return { type: "link" as const, text: btn.text, url: btn.url };
+            }
+            return {
+              type: "callback" as const,
+              text: btn.text,
+              payload: btn.payload ?? btn.text,
+            };
+          }),
+        ),
+      },
+    });
+  }
+
+  const body: MaxNewMessageBody = {
+    text: caption || undefined,
+    format: opts.format ?? undefined,
+    notify: opts.notify,
+    attachments,
+  };
+
+  if (opts.replyToMessageId) {
+    body.link = { type: "reply", mid: opts.replyToMessageId };
+  }
+
+  const chatId = Number(to);
+  const params: { chat_id?: number; user_id?: number; disable_link_preview?: boolean } = {
+    chat_id: chatId,
+  };
+
+  if (opts.disableLinkPreview) {
+    params.disable_link_preview = true;
+  }
+
+  const result = await api.sendMessage(body, params);
+
+  return {
+    messageId: result.message?.body?.mid ?? "",
+    raw: result,
+  };
+}

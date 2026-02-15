@@ -32,7 +32,7 @@ import {
   type ResolvedMaxAccount,
 } from "./accounts.js";
 import { MaxApi, type MaxUser } from "./api.js";
-import { sendMaxMessage } from "./send.js";
+import { sendMaxMessage, sendMaxMediaMessage } from "./send.js";
 import { startMaxPolling } from "./monitor.js";
 import { getMaxRuntime } from "./runtime.js";
 import { maxOnboardingAdapter } from "./onboarding.js";
@@ -265,15 +265,28 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
     },
 
     sendMedia: async ({ to, text, mediaUrl, accountId, replyToId }) => {
-      // For now, send media URL as text. Full media upload can be added later.
       const cfg = await getMaxRuntime().config.loadConfig();
       const account = resolveMaxAccount({ cfg, accountId });
       if (!account.token) throw new Error("MAX bot token not configured");
 
-      const fullText = mediaUrl ? `${text}\n${mediaUrl}`.trim() : text;
-      const result = await sendMaxMessage(to, fullText, {
+      if (!mediaUrl) {
+        // No media, send as text
+        const result = await sendMaxMessage(to, text, {
+          token: account.token,
+          replyToMessageId: replyToId ?? undefined,
+          format: "markdown",
+        });
+        return {
+          channel: "max",
+          messageId: result.messageId,
+        };
+      }
+
+      // Upload and send media
+      const result = await sendMaxMediaMessage(to, text, mediaUrl, {
         token: account.token,
         replyToMessageId: replyToId ?? undefined,
+        format: "markdown",
       });
 
       return {
