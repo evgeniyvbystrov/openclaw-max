@@ -11,6 +11,13 @@ import { MaxApi, type MaxUpdate, type MaxMessage, type MaxUser, type MaxCallback
 import { resolveMaxAccount, type ResolvedMaxAccount } from "./accounts.js";
 import { sendMaxMessage, sendMaxMediaMessage } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
+import {
+  registerMaxWebhookTarget,
+  resolveMaxWebhookPath,
+  subscribeMaxWebhook,
+  unsubscribeMaxWebhook,
+  type MaxWebhookTarget,
+} from "./webhook.js";
 
 export interface MaxMonitorOptions {
   api: MaxApi;
@@ -24,6 +31,22 @@ export interface MaxMonitorOptions {
 }
 
 export async function startMaxPolling(opts: MaxMonitorOptions): Promise<void> {
+  const { api, account, config, abortSignal, log, statusSink } = opts;
+  
+  // Check if webhook mode is configured
+  const webhookUrl = account.config.webhookUrl?.trim();
+  const useWebhook = Boolean(webhookUrl);
+
+  if (useWebhook) {
+    // Webhook mode
+    await startMaxWebhook({ ...opts, webhookUrl: webhookUrl! });
+  } else {
+    // Polling mode
+    await startMaxPollingLoop(opts);
+  }
+}
+
+async function startMaxPollingLoop(opts: MaxMonitorOptions): Promise<void> {
   const { api, account, config, abortSignal, log, statusSink } = opts;
   let marker: number | null = null;
 
@@ -66,6 +89,74 @@ export async function startMaxPolling(opts: MaxMonitorOptions): Promise<void> {
   }
 
   log?.info(`[${account.accountId}] MAX long-polling stopped`);
+}
+
+async function startMaxWebhook(opts: MaxMonitorOptions & { webhookUrl: string }): Promise<void> {
+  const { api, account, config, abortSignal, log, statusSink, webhookUrl } = opts;
+  
+  const webhookPath = resolveMaxWebhookPath(
+    account.config.webhookPath,
+    account.config.webhookUrl,
+  );
+  const webhookSecret = account.config.webhookSecret?.trim();
+
+  log?.info(`[${account.accountId}] MAX webhook mode: ${webhookUrl} (path: ${webhookPath})`);
+
+  // Register webhook handler
+  const target: MaxWebhookTarget = {
+    account,
+    config,
+    path: webhookPath,
+    secret: webhookSecret,
+    onUpdate: async (update) => {
+      try {
+        await dispatchUpdate(update, opts);
+      } catch (err) {
+        log?.error(`[${account.accountId}] Webhook update dispatch failed: ${String(err)}`);
+      }
+    },
+    log: (msg) => log?.info?.(msg),
+    error: (msg) => log?.error?.(msg),
+  };
+
+  const unregister = registerMaxWebhookTarget(target);
+
+  // Subscribe to webhook
+  try {
+    await subscribeMaxWebhook({
+      api,
+      webhookUrl,
+      secret: webhookSecret,
+    });
+    log?.info(`[${account.accountId}] MAX webhook subscribed: ${webhookUrl}`);
+  } catch (err) {
+    log?.error(`[${account.accountId}] MAX webhook subscription failed: ${String(err)}`);
+    unregister();
+    throw err;
+  }
+
+  // Wait for abort signal
+  await new Promise<void>((resolve) => {
+    const checkAbort = () => {
+      if (abortSignal.aborted) {
+        resolve();
+      } else {
+        setTimeout(checkAbort, 1000);
+      }
+    };
+    checkAbort();
+  });
+
+  // Unsubscribe on stop
+  try {
+    await unsubscribeMaxWebhook({ api, webhookUrl });
+    log?.info(`[${account.accountId}] MAX webhook unsubscribed`);
+  } catch (err) {
+    log?.error(`[${account.accountId}] MAX webhook unsubscribe failed: ${String(err)}`);
+  }
+
+  unregister();
+  log?.info(`[${account.accountId}] MAX webhook mode stopped`);
 }
 
 // ── Dispatch ──

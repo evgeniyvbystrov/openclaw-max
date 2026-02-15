@@ -15,6 +15,10 @@ export interface MaxAccountConfig {
   groups?: Record<string, { requireMention?: boolean; [key: string]: unknown }>;
   groupPolicy?: string;
   groupAllowFrom?: Array<string | number>;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  webhookPath?: string;
+  mediaMaxMb?: number;
 }
 
 export interface ResolvedMaxAccount {
@@ -99,6 +103,10 @@ export function resolveMaxAccount(params: {
       groups: section.groups as MaxAccountConfig["groups"],
       groupPolicy: section.groupPolicy as string | undefined,
       groupAllowFrom: section.groupAllowFrom as Array<string | number> | undefined,
+      webhookUrl: section.webhookUrl as string | undefined,
+      webhookSecret: section.webhookSecret as string | undefined,
+      webhookPath: section.webhookPath as string | undefined,
+      mediaMaxMb: section.mediaMaxMb as number | undefined,
     };
 
     if (accountConfig.botToken?.trim()) {
@@ -120,6 +128,10 @@ export function resolveMaxAccount(params: {
       groups: raw.groups as MaxAccountConfig["groups"],
       groupPolicy: raw.groupPolicy as string | undefined,
       groupAllowFrom: raw.groupAllowFrom as Array<string | number> | undefined,
+      webhookUrl: raw.webhookUrl as string | undefined,
+      webhookSecret: raw.webhookSecret as string | undefined,
+      webhookPath: raw.webhookPath as string | undefined,
+      mediaMaxMb: raw.mediaMaxMb as number | undefined,
     };
 
     if (accountConfig.botToken?.trim()) {
