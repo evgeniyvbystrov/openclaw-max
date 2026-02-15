@@ -14,6 +14,7 @@ import {
   DEFAULT_ACCOUNT_ID,
   normalizeAccountId,
   emptyPluginConfigSchema,
+  buildChannelConfigSchema,
   formatPairingApproveHint,
   PAIRING_APPROVED_MESSAGE,
   setAccountEnabledInConfigSection,
@@ -33,6 +34,7 @@ import { sendMaxMessage } from "./send.js";
 import { startMaxPolling } from "./monitor.js";
 import { getMaxRuntime } from "./runtime.js";
 import { maxOnboardingAdapter } from "./onboarding.js";
+import { MaxConfigSchema } from "./config-schema.js";
 
 // ── Meta ──
 
@@ -52,6 +54,7 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   id: "max",
   meta: maxMeta,
   onboarding: maxOnboardingAdapter,
+  configSchema: buildChannelConfigSchema(MaxConfigSchema),
 
   capabilities: {
     chatTypes: ["direct", "group", "channel"],

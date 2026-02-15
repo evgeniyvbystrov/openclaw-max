@@ -1,0 +1,91 @@
+/**
+ * MAX channel config Zod schema
+ */
+
+import {
+  BlockStreamingCoalesceSchema,
+  DmConfigSchema,
+  DmPolicySchema,
+  GroupPolicySchema,
+  MarkdownConfigSchema,
+  ToolPolicySchema,
+  requireOpenAllowFrom,
+} from "openclaw/plugin-sdk";
+import { z } from "zod";
+
+/**
+ * Per-group config for MAX chats
+ */
+export const MaxGroupSchema = z
+  .object({
+    requireMention: z.boolean().optional(),
+    tools: ToolPolicySchema.optional(),
+    skills: z.array(z.string()).optional(),
+    enabled: z.boolean().optional(),
+    allowFrom: z.array(z.union([z.string(), z.number()])).optional(),
+    systemPrompt: z.string().optional(),
+  })
+  .strict();
+
+/**
+ * MAX account config (base schema for both top-level and accounts.*)
+ */
+export const MaxAccountSchemaBase = z
+  .object({
+    name: z.string().optional(),
+    enabled: z.boolean().optional(),
+    markdown: MarkdownConfigSchema.optional(),
+    botToken: z.string().optional(),
+    tokenFile: z.string().optional(),
+    dmPolicy: DmPolicySchema.optional().default("pairing"),
+    allowFrom: z.array(z.union([z.string(), z.number()])).optional(),
+    groupAllowFrom: z.array(z.union([z.string(), z.number()])).optional(),
+    groupPolicy: GroupPolicySchema.optional().default("allowlist"),
+    groups: z.record(z.string(), MaxGroupSchema.optional()).optional(),
+    webhookUrl: z.string().optional(),
+    webhookSecret: z.string().optional(),
+    webhookPath: z.string().optional(),
+    historyLimit: z.number().int().min(0).optional(),
+    dmHistoryLimit: z.number().int().min(0).optional(),
+    dms: z.record(z.string(), DmConfigSchema.optional()).optional(),
+    textChunkLimit: z.number().int().positive().optional(),
+    blockStreaming: z.boolean().optional(),
+    blockStreamingCoalesce: BlockStreamingCoalesceSchema.optional(),
+    responsePrefix: z.string().optional(),
+    mediaMaxMb: z.number().positive().optional(),
+    actions: z
+      .record(
+        z.string(),
+        z.union([z.boolean(), z.enum(["pairing", "allowlist", "open"])]).optional(),
+      )
+      .optional(),
+  })
+  .strict();
+
+/**
+ * Individual account schema (with open-policy validation)
+ */
+export const MaxAccountSchema = MaxAccountSchemaBase.superRefine((value, ctx) => {
+  requireOpenAllowFrom({
+    policy: value.dmPolicy,
+    allowFrom: value.allowFrom,
+    ctx,
+    path: ["allowFrom"],
+    message: 'channels.max.dmPolicy="open" requires channels.max.allowFrom to include "*"',
+  });
+});
+
+/**
+ * Top-level MAX config schema (supports accounts.* sub-configs)
+ */
+export const MaxConfigSchema = MaxAccountSchemaBase.extend({
+  accounts: z.record(z.string(), MaxAccountSchema.optional()).optional(),
+}).superRefine((value, ctx) => {
+  requireOpenAllowFrom({
+    policy: value.dmPolicy,
+    allowFrom: value.allowFrom,
+    ctx,
+    path: ["allowFrom"],
+    message: 'channels.max.dmPolicy="open" requires channels.max.allowFrom to include "*"',
+  });
+});
