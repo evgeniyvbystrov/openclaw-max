@@ -1,5 +1,5 @@
 /**
- * openclaw-max — MAX messenger channel plugin for OpenClaw.
+ * MAX messenger channel plugin for OpenClaw.
  *
  * Entry point: registers the MAX channel with the OpenClaw plugin system.
  */

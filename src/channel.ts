@@ -21,9 +21,10 @@ import {
   deleteAccountFromConfigSection,
   applyAccountNameToChannelSection,
   migrateBaseNameToDefaultAccount,
-  resolveGroupRequireMention,
-  resolveGroupToolPolicy,
+  resolveToolsBySender,
 } from "openclaw/plugin-sdk";
+
+import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk";
 
 import {
   listMaxAccountIds,
@@ -38,6 +39,85 @@ import { getMaxRuntime } from "./runtime.js";
 import { maxOnboardingAdapter } from "./onboarding.js";
 import { MaxConfigSchema } from "./config-schema.js";
 import { maxMessageActions } from "./actions.js";
+
+// ── MAX group policy helpers ──
+// These mirror resolveChannelGroupRequireMention/resolveChannelGroupToolsPolicy
+// (internal SDK functions not exported) but for the "max" channel.
+
+function resolveMaxGroupConfig(cfg: OpenClawConfig, groupId?: string | null, accountId?: string | null) {
+  const maxSection = (cfg.channels as Record<string, unknown>)?.max as Record<string, unknown> | undefined;
+  if (!maxSection) return { groupConfig: undefined, defaultConfig: undefined };
+
+  // Resolve groups map: account-level takes priority over channel-level
+  let groups: Record<string, unknown> | undefined;
+  if (accountId && accountId !== DEFAULT_ACCOUNT_ID) {
+    const accounts = maxSection.accounts as Record<string, Record<string, unknown>> | undefined;
+    groups = accounts?.[accountId]?.groups as Record<string, unknown> | undefined;
+  }
+  if (!groups) {
+    groups = maxSection.groups as Record<string, unknown> | undefined;
+  }
+
+  const normalizedId = groupId?.trim();
+  const groupConfig = normalizedId && groups
+    ? (groups[normalizedId] as Record<string, unknown> | undefined)
+    : undefined;
+  const defaultConfig = groups?.["*"] as Record<string, unknown> | undefined;
+
+  return { groupConfig, defaultConfig };
+}
+
+function resolveMaxGroupRequireMention(params: {
+  cfg: OpenClawConfig;
+  groupId?: string | null;
+  accountId?: string | null;
+}): boolean {
+  const { groupConfig, defaultConfig } = resolveMaxGroupConfig(params.cfg, params.groupId, params.accountId);
+  const configMention =
+    typeof groupConfig?.requireMention === "boolean"
+      ? groupConfig.requireMention
+      : typeof defaultConfig?.requireMention === "boolean"
+        ? defaultConfig.requireMention
+        : undefined;
+  if (typeof configMention === "boolean") return configMention;
+  return true; // default: require mention
+}
+
+function resolveMaxGroupToolPolicy(params: {
+  cfg: OpenClawConfig;
+  groupId?: string | null;
+  accountId?: string | null;
+  senderId?: string | null;
+  senderName?: string | null;
+  senderUsername?: string | null;
+  senderE164?: string | null;
+}): GroupToolPolicyConfig | undefined {
+  const { groupConfig, defaultConfig } = resolveMaxGroupConfig(params.cfg, params.groupId, params.accountId);
+
+  // Group-level sender-specific policy
+  const groupSenderPolicy = resolveToolsBySender({
+    toolsBySender: groupConfig?.toolsBySender as Record<string, GroupToolPolicyConfig> | undefined,
+    senderId: params.senderId,
+    senderName: params.senderName,
+    senderUsername: params.senderUsername,
+    senderE164: params.senderE164,
+  });
+  if (groupSenderPolicy) return groupSenderPolicy;
+  if (groupConfig?.tools) return groupConfig.tools as GroupToolPolicyConfig;
+
+  // Default config fallback
+  const defaultSenderPolicy = resolveToolsBySender({
+    toolsBySender: defaultConfig?.toolsBySender as Record<string, GroupToolPolicyConfig> | undefined,
+    senderId: params.senderId,
+    senderName: params.senderName,
+    senderUsername: params.senderUsername,
+    senderE164: params.senderE164,
+  });
+  if (defaultSenderPolicy) return defaultSenderPolicy;
+  if (defaultConfig?.tools) return defaultConfig.tools as GroupToolPolicyConfig;
+
+  return undefined;
+}
 
 // ── Meta ──
 
@@ -153,22 +233,10 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   },
 
   groups: {
-    resolveRequireMention: ({ cfg, conversationId }) =>
-      resolveGroupRequireMention({
-        groupResolution: {
-          groupPolicy: cfg.channels?.defaults?.groupPolicy ?? "allowlist",
-          groups: cfg.channels?.max?.groups ?? {},
-        },
-        conversationId,
-      }),
-    resolveToolPolicy: ({ cfg, conversationId }) =>
-      resolveGroupToolPolicy({
-        groupResolution: {
-          groupPolicy: cfg.channels?.defaults?.groupPolicy ?? "allowlist",
-          groups: cfg.channels?.max?.groups ?? {},
-        },
-        conversationId,
-      }),
+    resolveRequireMention: ({ cfg, groupId, accountId }) =>
+      resolveMaxGroupRequireMention({ cfg, groupId, accountId }),
+    resolveToolPolicy: ({ cfg, groupId, accountId, senderId, senderName, senderUsername, senderE164 }) =>
+      resolveMaxGroupToolPolicy({ cfg, groupId, accountId, senderId, senderName, senderUsername, senderE164 }),
   },
 
   pairing: {
