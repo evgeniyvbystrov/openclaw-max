@@ -32,6 +32,7 @@ import { MaxApi, type MaxUser } from "./api.js";
 import { sendMaxMessage } from "./send.js";
 import { startMaxPolling } from "./monitor.js";
 import { getMaxRuntime } from "./runtime.js";
+import { maxOnboardingAdapter } from "./onboarding.js";
 
 // ── Meta ──
 
@@ -50,6 +51,7 @@ const maxMeta: ChannelMeta = {
 export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   id: "max",
   meta: maxMeta,
+  onboarding: maxOnboardingAdapter,
 
   capabilities: {
     chatTypes: ["direct", "group", "channel"],
