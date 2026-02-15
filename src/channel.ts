@@ -64,7 +64,7 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
     reactions: false,
     threads: false,
     media: true,
-    nativeCommands: false,
+    nativeCommands: true,
     blockStreaming: true,
     edit: true,
     polls: false,
@@ -545,6 +545,18 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
       ctx.log?.info(`[${account.accountId}] Starting MAX provider${botLabel}`);
 
       const api = new MaxApi({ token });
+
+      // Register bot commands if configured
+      const commands = ctx.cfg.channels?.max?.commands as Array<{ name: string; description?: string }> | undefined;
+      if (commands?.length) {
+        try {
+          await api.setMyCommands(commands);
+          ctx.log?.info(`[${account.accountId}] Registered ${commands.length} bot commands`);
+        } catch (err) {
+          ctx.log?.error(`[${account.accountId}] Failed to register commands: ${String(err)}`);
+        }
+      }
+
       return startMaxPolling({
         api,
         account,

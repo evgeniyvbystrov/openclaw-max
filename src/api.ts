@@ -350,6 +350,12 @@ export class MaxApi {
     return this.request("DELETE", "/subscriptions", { url: subscriptionUrl });
   }
 
+  // ── Commands ──
+
+  async setMyCommands(commands: MaxBotCommand[]): Promise<MaxSimpleResult> {
+    return this.request("POST", "/me/commands", undefined, { commands });
+  }
+
   // ── Upload ──
 
   async getUploadUrl(type: "image" | "video" | "audio" | "file"): Promise<MaxUploadUrlResponse> {
