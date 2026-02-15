@@ -21,6 +21,8 @@ import {
   deleteAccountFromConfigSection,
   applyAccountNameToChannelSection,
   migrateBaseNameToDefaultAccount,
+  resolveGroupRequireMention,
+  resolveGroupToolPolicy,
 } from "openclaw/plugin-sdk";
 
 import {
@@ -131,6 +133,25 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
         normalizeEntry: (raw: string) => raw.replace(/^max:/i, ""),
       };
     },
+  },
+
+  groups: {
+    resolveRequireMention: ({ cfg, conversationId }) =>
+      resolveGroupRequireMention({
+        groupResolution: {
+          groupPolicy: cfg.channels?.defaults?.groupPolicy ?? "allowlist",
+          groups: cfg.channels?.max?.groups ?? {},
+        },
+        conversationId,
+      }),
+    resolveToolPolicy: ({ cfg, conversationId }) =>
+      resolveGroupToolPolicy({
+        groupResolution: {
+          groupPolicy: cfg.channels?.defaults?.groupPolicy ?? "allowlist",
+          groups: cfg.channels?.max?.groups ?? {},
+        },
+        conversationId,
+      }),
   },
 
   pairing: {
