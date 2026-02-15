@@ -3,3 +3,7 @@ dist/
 *.tsbuildinfo
 .env
 .env.*
+
+# Test coverage
+coverage/
+.nyc_output/
