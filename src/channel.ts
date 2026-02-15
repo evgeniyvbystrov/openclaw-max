@@ -181,6 +181,49 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
     },
   },
 
+  directory: {
+    self: async ({ account }) => {
+      if (!account.token) return null;
+      try {
+        const api = new MaxApi({ token: account.token, timeoutMs: 3000 });
+        const me = await api.getMe();
+        return {
+          id: String(me.user_id),
+          name: me.first_name || undefined,
+          username: me.username || undefined,
+          label: me.username ? `@${me.username}` : me.first_name,
+        };
+      } catch {
+        return null;
+      }
+    },
+    listPeers: async ({ account }) => {
+      // MAX doesn't expose a full user list API. Return peers from allowFrom config.
+      const allowFrom = account.config.allowFrom ?? [];
+      return allowFrom.map((id) => ({
+        id: String(id),
+        name: undefined,
+        label: String(id),
+      }));
+    },
+    listGroups: async ({ account }) => {
+      if (!account.token) return [];
+      try {
+        const api = new MaxApi({ token: account.token, timeoutMs: 5000 });
+        const result = await api.getChats({ count: 100 });
+        return (result.chats ?? [])
+          .filter((chat) => chat.type === "chat" || chat.type === "channel")
+          .map((chat) => ({
+            id: String(chat.chat_id),
+            name: chat.title || undefined,
+            label: chat.title || `Chat ${chat.chat_id}`,
+          }));
+      } catch {
+        return [];
+      }
+    },
+  },
+
   outbound: {
     deliveryMode: "direct",
     chunker: (text, limit) => getMaxRuntime().channel.text.chunkMarkdownText(text, limit),
