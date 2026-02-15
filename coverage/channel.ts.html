@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/530</span>
+                <span class='fraction'>0/537</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/530</span>
+                <span class='fraction'>0/537</span>
             </div>
         
             
@@ -723,7 +723,19 @@
 <a name='L658'></a><a href='#L658'>658</a>
 <a name='L659'></a><a href='#L659'>659</a>
 <a name='L660'></a><a href='#L660'>660</a>
-<a name='L661'></a><a href='#L661'>661</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L661'></a><a href='#L661'>661</a>
+<a name='L662'></a><a href='#L662'>662</a>
+<a name='L663'></a><a href='#L663'>663</a>
+<a name='L664'></a><a href='#L664'>664</a>
+<a name='L665'></a><a href='#L665'>665</a>
+<a name='L666'></a><a href='#L666'>666</a>
+<a name='L667'></a><a href='#L667'>667</a>
+<a name='L668'></a><a href='#L668'>668</a>
+<a name='L669'></a><a href='#L669'>669</a>
+<a name='L670'></a><a href='#L670'>670</a>
+<a name='L671'></a><a href='#L671'>671</a>
+<a name='L672'></a><a href='#L672'>672</a>
+<a name='L673'></a><a href='#L673'>673</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1008,7 +1020,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1282,6 +1300,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1652,42 +1676,48 @@ import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk";
 <span class="cstat-no" title="statement not covered" >  },</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  directory: {</span>
-<span class="cstat-no" title="statement not covered" >    self: async ({ account }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    self: async ({ cfg, accountId }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      const account = resolveMaxAccount({ cfg, accountId });</span>
 <span class="cstat-no" title="statement not covered" >      if (!account.token) return null;</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        const api = new MaxApi({ token: account.token, timeoutMs: 3000 });</span>
 <span class="cstat-no" title="statement not covered" >        const me = await api.getMe();</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
+<span class="cstat-no" title="statement not covered" >          kind: "user" as const,</span>
 <span class="cstat-no" title="statement not covered" >          id: String(me.user_id),</span>
 <span class="cstat-no" title="statement not covered" >          name: me.first_name || undefined,</span>
-<span class="cstat-no" title="statement not covered" >          username: me.username || undefined,</span>
-<span class="cstat-no" title="statement not covered" >          label: me.username ? `@${me.username}` : me.first_name,</span>
+<span class="cstat-no" title="statement not covered" >          handle: me.username || undefined,</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      } catch {</span>
 <span class="cstat-no" title="statement not covered" >        return null;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
-<span class="cstat-no" title="statement not covered" >    listPeers: async ({ account }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    listPeers: async ({ cfg, accountId }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      const account = resolveMaxAccount({ cfg, accountId });</span>
       // MAX doesn't expose a full user list API. Return peers from allowFrom config.
 <span class="cstat-no" title="statement not covered" >      const allowFrom = account.config.allowFrom ?? [];</span>
-<span class="cstat-no" title="statement not covered" >      return allowFrom.map((id) =&gt; ({</span>
+<span class="cstat-no" title="statement not covered" >      return allowFrom.map((id: string | number) =&gt; ({</span>
+<span class="cstat-no" title="statement not covered" >        kind: "user" as const,</span>
 <span class="cstat-no" title="statement not covered" >        id: String(id),</span>
 <span class="cstat-no" title="statement not covered" >        name: undefined,</span>
-<span class="cstat-no" title="statement not covered" >        label: String(id),</span>
 <span class="cstat-no" title="statement not covered" >      }));</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
-<span class="cstat-no" title="statement not covered" >    listGroups: async ({ account }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    listGroups: async ({ cfg, accountId }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      const account = resolveMaxAccount({ cfg, accountId });</span>
 <span class="cstat-no" title="statement not covered" >      if (!account.token) return [];</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        const api = new MaxApi({ token: account.token, timeoutMs: 5000 });</span>
 <span class="cstat-no" title="statement not covered" >        const result = await api.getChats({ count: 100 });</span>
 <span class="cstat-no" title="statement not covered" >        return (result.chats ?? [])</span>
 <span class="cstat-no" title="statement not covered" >          .filter((chat) =&gt; chat.type === "chat" || chat.type === "channel")</span>
-<span class="cstat-no" title="statement not covered" >          .map((chat) =&gt; ({</span>
-<span class="cstat-no" title="statement not covered" >            id: String(chat.chat_id),</span>
-<span class="cstat-no" title="statement not covered" >            name: chat.title || undefined,</span>
-<span class="cstat-no" title="statement not covered" >            label: chat.title || `Chat ${chat.chat_id}`,</span>
-<span class="cstat-no" title="statement not covered" >          }));</span>
+<span class="cstat-no" title="statement not covered" >          .map((chat) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >            const kind: "channel" | "group" = chat.type === "channel" ? "channel" : "group";</span>
+<span class="cstat-no" title="statement not covered" >            return {</span>
+<span class="cstat-no" title="statement not covered" >              kind,</span>
+<span class="cstat-no" title="statement not covered" >              id: String(chat.chat_id),</span>
+<span class="cstat-no" title="statement not covered" >              name: chat.title || undefined,</span>
+<span class="cstat-no" title="statement not covered" >            };</span>
+<span class="cstat-no" title="statement not covered" >          });</span>
 <span class="cstat-no" title="statement not covered" >      } catch {</span>
 <span class="cstat-no" title="statement not covered" >        return [];</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
@@ -1942,14 +1972,20 @@ import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk";
 <span class="cstat-no" title="statement not covered" >    },</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    collectStatusIssues: (accounts) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      const issues: Array&lt;{ channel: string; accountId: string; kind: string; message: string; fix?: string }&gt; = [];</span>
+<span class="cstat-no" title="statement not covered" >      const issues: Array&lt;{</span>
+        channel: string;
+        accountId: string;
+        kind: "config" | "permissions" | "auth" | "runtime" | "intent";
+        message: string;
+        fix?: string;
+<span class="cstat-no" title="statement not covered" >      }&gt; = [];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      for (const snapshot of accounts) {</span>
 <span class="cstat-no" title="statement not covered" >        if (!snapshot.configured) {</span>
 <span class="cstat-no" title="statement not covered" >          issues.push({</span>
 <span class="cstat-no" title="statement not covered" >            channel: "max",</span>
 <span class="cstat-no" title="statement not covered" >            accountId: snapshot.accountId,</span>
-<span class="cstat-no" title="statement not covered" >            kind: "config",</span>
+<span class="cstat-no" title="statement not covered" >            kind: "config" as const,</span>
 <span class="cstat-no" title="statement not covered" >            message: "MAX bot token not configured",</span>
 <span class="cstat-no" title="statement not covered" >            fix: "Set channels.max.botToken or MAX_BOT_TOKEN env var",</span>
 <span class="cstat-no" title="statement not covered" >          });</span>
@@ -2050,7 +2086,7 @@ import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk";
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-15T12:36:41.267Z
+                at 2026-02-15T12:40:24.001Z
             </div>
         <script src="prettify.js"></script>
         <script>
