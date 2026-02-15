@@ -1,0 +1,115 @@
+/**
+ * MAX channel message actions adapter — implements message tool actions
+ */
+
+import type {
+  ChannelMessageActionAdapter,
+  ChannelMessageActionName,
+  OpenClawConfig,
+} from "openclaw/plugin-sdk";
+import {
+  createActionGate,
+  jsonResult,
+  readStringParam,
+} from "openclaw/plugin-sdk";
+import { listMaxAccountIds, resolveMaxAccount } from "./accounts.js";
+import { sendMaxMessage, editMaxMessage, deleteMaxMessage } from "./send.js";
+import { getMaxRuntime } from "./runtime.js";
+
+const providerId = "max";
+
+function listEnabledAccounts(cfg: OpenClawConfig) {
+  return listMaxAccountIds(cfg)
+    .map((accountId) => resolveMaxAccount({ cfg, accountId }))
+    .filter((account) => account.enabled && account.token);
+}
+
+export const maxMessageActions: ChannelMessageActionAdapter = {
+  listActions: ({ cfg }) => {
+    const accounts = listEnabledAccounts(cfg);
+    if (accounts.length === 0) {
+      return [];
+    }
+    const actions = new Set<ChannelMessageActionName>([]);
+    actions.add("send");
+    actions.add("edit");
+    actions.add("delete");
+    return Array.from(actions);
+  },
+
+  extractToolSend: ({ args }) => {
+    const action = typeof args.action === "string" ? args.action.trim() : "";
+    if (action !== "send") {
+      return null;
+    }
+    const to = typeof args.target === "string" ? args.target : undefined;
+    if (!to) {
+      return null;
+    }
+    const accountId = typeof args.accountId === "string" ? args.accountId.trim() : undefined;
+    return { to, accountId };
+  },
+
+  handleAction: async ({ action, params, cfg, accountId }) => {
+    const account = resolveMaxAccount({
+      cfg,
+      accountId,
+    });
+    if (!account.token) {
+      throw new Error("MAX bot token not configured");
+    }
+
+    if (action === "send") {
+      const to = readStringParam(params, "target", { required: true });
+      const content = readStringParam(params, "message", {
+        required: true,
+        allowEmpty: true,
+      });
+      const mediaUrl = readStringParam(params, "media", { trim: false });
+      const replyTo = readStringParam(params, "replyTo");
+
+      if (mediaUrl) {
+        // TODO: Upload media via api.getUploadUrl() + POST to upload URL
+        // For now, send media URL as text
+        const core = getMaxRuntime();
+        const fullText = mediaUrl ? `${content}\n${mediaUrl}`.trim() : content;
+        const result = await sendMaxMessage(to, fullText, {
+          token: account.token,
+          replyToMessageId: replyTo ?? undefined,
+          format: "markdown",
+        });
+        return jsonResult({ ok: true, to, messageId: result.messageId });
+      }
+
+      const result = await sendMaxMessage(to, content, {
+        token: account.token,
+        replyToMessageId: replyTo ?? undefined,
+        format: "markdown",
+      });
+      return jsonResult({ ok: true, to, messageId: result.messageId });
+    }
+
+    if (action === "edit") {
+      const messageId = readStringParam(params, "messageId", { required: true });
+      const text = readStringParam(params, "message", {
+        required: true,
+        allowEmpty: true,
+      });
+      await editMaxMessage(messageId, text, {
+        token: account.token,
+        format: "markdown",
+      });
+      return jsonResult({ ok: true, messageId });
+    }
+
+    if (action === "delete") {
+      const messageId = readStringParam(params, "messageId", { required: true });
+      await deleteMaxMessage(messageId, {
+        token: account.token,
+      });
+      return jsonResult({ ok: true, messageId });
+    }
+
+    throw new Error(`Action ${action} is not supported for provider ${providerId}.`);
+  },
+};

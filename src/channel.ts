@@ -35,6 +35,7 @@ import { startMaxPolling } from "./monitor.js";
 import { getMaxRuntime } from "./runtime.js";
 import { maxOnboardingAdapter } from "./onboarding.js";
 import { MaxConfigSchema } from "./config-schema.js";
+import { maxMessageActions } from "./actions.js";
 
 // ── Meta ──
 
@@ -391,8 +392,6 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
     },
   },
 
-  // Inline keyboard support via actions
-  actions: {
-    supportsButtons: () => true,
-  },
+  // Message actions (send, edit, delete)
+  actions: maxMessageActions,
 };
