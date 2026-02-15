@@ -1,0 +1,11 @@
+{
+  "id": "max",
+  "name": "MAX Messenger",
+  "description": "Channel plugin for MAX messenger (max.ru)",
+  "channels": ["max"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

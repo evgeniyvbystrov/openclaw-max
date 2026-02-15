@@ -1,0 +1,442 @@
+/**
+ * MAX long-polling monitor — receives updates and dispatches them to OpenClaw.
+ *
+ * Uses the same inbound pipeline as other channel plugins:
+ * finalizeInboundContext → dispatchReplyWithBufferedBlockDispatcher
+ */
+
+import type { ChannelLogSink, OpenClawConfig } from "openclaw/plugin-sdk";
+import { createReplyPrefixOptions } from "openclaw/plugin-sdk";
+import { MaxApi, type MaxUpdate, type MaxMessage, type MaxUser, type MaxCallback } from "./api.js";
+import { resolveMaxAccount, type ResolvedMaxAccount } from "./accounts.js";
+import { sendMaxMessage } from "./send.js";
+import { getMaxRuntime } from "./runtime.js";
+
+export interface MaxMonitorOptions {
+  api: MaxApi;
+  account: ResolvedMaxAccount;
+  config: OpenClawConfig;
+  abortSignal: AbortSignal;
+  botUserId?: number;
+  botUsername?: string;
+  log?: ChannelLogSink;
+  statusSink?: (patch: { lastInboundAt?: number; lastOutboundAt?: number }) => void;
+}
+
+export async function startMaxPolling(opts: MaxMonitorOptions): Promise<void> {
+  const { api, account, config, abortSignal, log, statusSink } = opts;
+  let marker: number | null = null;
+
+  log?.info(`[${account.accountId}] MAX long-polling started`);
+
+  while (!abortSignal.aborted) {
+    try {
+      const resp = await api.getUpdates({
+        timeout: 30,
+        marker: marker ?? undefined,
+        types: [
+          "message_created",
+          "message_callback",
+          "message_edited",
+          "message_removed",
+          "bot_started",
+          "bot_added",
+          "bot_removed",
+        ],
+      });
+
+      if (resp.marker != null) {
+        marker = resp.marker;
+      }
+
+      for (const update of resp.updates) {
+        if (abortSignal.aborted) break;
+        try {
+          await dispatchUpdate(update, opts);
+        } catch (err) {
+          log?.error(`[${account.accountId}] Error dispatching update ${update.update_type}: ${String(err)}`);
+        }
+      }
+    } catch (err) {
+      if (abortSignal.aborted) break;
+      log?.error(`[${account.accountId}] Polling error: ${String(err)}`);
+      // Back off on error
+      await sleep(3000);
+    }
+  }
+
+  log?.info(`[${account.accountId}] MAX long-polling stopped`);
+}
+
+// ── Dispatch ──
+
+async function dispatchUpdate(
+  update: MaxUpdate,
+  opts: MaxMonitorOptions,
+): Promise<void> {
+  const { log, account, statusSink } = opts;
+
+  switch (update.update_type) {
+    case "message_created": {
+      if (!update.message) break;
+      // Skip messages from the bot itself
+      if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
+      statusSink?.({ lastInboundAt: Date.now() });
+      await processIncomingMessage(update.message, update.user_locale, opts);
+      break;
+    }
+
+    case "message_callback": {
+      if (!update.callback) break;
+      statusSink?.({ lastInboundAt: Date.now() });
+      await processCallback(update.callback, opts);
+      break;
+    }
+
+    case "message_edited": {
+      log?.debug?.(`[${account.accountId}] Message edited: ${update.message?.body?.mid}`);
+      break;
+    }
+
+    case "bot_started": {
+      if (!update.user) break;
+      log?.info(`[${account.accountId}] Bot started by user ${update.user.user_id}`);
+      statusSink?.({ lastInboundAt: Date.now() });
+      await processBotStarted(update.user, update.chat_id, opts);
+      break;
+    }
+
+    case "bot_added": {
+      log?.info(`[${account.accountId}] Bot added to chat ${update.chat_id}`);
+      break;
+    }
+
+    case "bot_removed": {
+      log?.info(`[${account.accountId}] Bot removed from chat ${update.chat_id}`);
+      break;
+    }
+
+    default:
+      log?.debug?.(`[${account.accountId}] Unhandled update type: ${update.update_type}`);
+  }
+}
+
+// ── Process messages through OpenClaw pipeline ──
+
+async function processIncomingMessage(
+  message: MaxMessage,
+  userLocale: string | null | undefined,
+  opts: MaxMonitorOptions,
+): Promise<void> {
+  const { account, config, log, statusSink } = opts;
+  const core = getMaxRuntime();
+
+  const senderId = message.sender?.user_id;
+  const senderName = formatSenderName(message.sender);
+  const senderUsername = message.sender?.username ?? undefined;
+
+  // Determine chat type and IDs
+  const chatId = message.recipient.chat_id;
+  const chatType = message.recipient.chat_type; // "dialog", "chat", "channel"
+  const isGroup = chatType === "chat" || chatType === "channel";
+
+  const rawText = message.body.text ?? "";
+  const messageId = message.body.mid;
+
+  if (!rawText.trim()) return;
+
+  // Check for reply context
+  const replyToId = message.link?.type === "reply" ? message.link.message?.body?.mid : undefined;
+
+  // Check for bot mention in group chats
+  let wasMentioned: boolean | undefined;
+  if (isGroup && opts.botUsername) {
+    // MAX doesn't have annotation-based mentions like Google Chat,
+    // so we check if the text contains @botname
+    const mentionPattern = new RegExp(`@${opts.botUsername}\\b`, "i");
+    wasMentioned = mentionPattern.test(rawText);
+  }
+
+  // DM security: check pairing/allowlist
+  if (!isGroup) {
+    const dmPolicy = account.config.dmPolicy ?? "pairing";
+    if (dmPolicy === "disabled") {
+      log?.debug?.(`[${account.accountId}] Blocked DM from ${senderId} (dmPolicy=disabled)`);
+      return;
+    }
+
+    if (dmPolicy !== "open") {
+      const configAllowFrom = (account.config.allowFrom ?? []).map(String);
+      const storeAllowFrom = await core.channel.pairing.readAllowFromStore("max").catch(() => []);
+      const effectiveAllowFrom = [...configAllowFrom, ...storeAllowFrom];
+
+      const senderStr = String(senderId);
+      const allowed = effectiveAllowFrom.includes(senderStr) || effectiveAllowFrom.includes("*");
+
+      if (!allowed) {
+        if (dmPolicy === "pairing") {
+          const { code, created } = await core.channel.pairing.upsertPairingRequest({
+            channel: "max",
+            id: senderStr,
+            meta: { name: senderName },
+          });
+          if (created) {
+            log?.info(`[${account.accountId}] Pairing request from ${senderStr}`);
+            try {
+              const pairingReply = core.channel.pairing.buildPairingReply({
+                channel: "max",
+                idLine: `Your MAX user id: ${senderStr}`,
+                code,
+              });
+              await sendMaxMessage(String(chatId ?? senderId), pairingReply, {
+                token: account.token,
+              });
+              statusSink?.({ lastOutboundAt: Date.now() });
+            } catch (err) {
+              log?.error(`[${account.accountId}] Pairing reply failed: ${String(err)}`);
+            }
+          }
+        }
+        return;
+      }
+    }
+  }
+
+  // Group policy
+  if (isGroup) {
+    const defaultGroupPolicy = config.channels?.defaults?.groupPolicy;
+    const groupPolicy = account.config.groupPolicy ?? defaultGroupPolicy ?? "allowlist";
+
+    if (groupPolicy === "disabled") {
+      log?.debug?.(`[${account.accountId}] Blocked group message (groupPolicy=disabled)`);
+      return;
+    }
+
+    // For allowlist policy, check if chat is in the groups config
+    if (groupPolicy === "allowlist") {
+      const groups = account.config.groups ?? {};
+      const chatIdStr = String(chatId);
+      const hasWildcard = "*" in groups;
+      const chatAllowed = chatIdStr in groups || hasWildcard;
+      if (!chatAllowed) {
+        log?.debug?.(`[${account.accountId}] Blocked group message (not in allowlist, chat=${chatIdStr})`);
+        return;
+      }
+    }
+
+    // Require mention in groups
+    const groupCfg = account.config.groups?.[String(chatId)] ?? account.config.groups?.["*"];
+    const requireMention = groupCfg?.requireMention ?? true;
+    if (requireMention && !wasMentioned) {
+      log?.debug?.(`[${account.accountId}] Skipping group message (not mentioned)`);
+      return;
+    }
+  }
+
+  // Resolve agent route
+  const chatIdStr = String(chatId ?? senderId);
+  const route = core.channel.routing.resolveAgentRoute({
+    cfg: config,
+    channel: "max",
+    accountId: account.accountId,
+    peer: {
+      kind: isGroup ? "group" : "direct",
+      id: chatIdStr,
+    },
+  });
+
+  // Build context
+  const fromLabel = isGroup
+    ? `chat:${chatIdStr}`
+    : senderName || `user:${senderId}`;
+
+  const storePath = core.channel.session.resolveStorePath(config.session?.store, {
+    agentId: route.agentId,
+  });
+  const envelopeOptions = core.channel.reply.resolveEnvelopeFormatOptions(config);
+  const previousTimestamp = core.channel.session.readSessionUpdatedAt({
+    storePath,
+    sessionKey: route.sessionKey,
+  });
+
+  const body = core.channel.reply.formatAgentEnvelope({
+    channel: "MAX",
+    from: fromLabel,
+    timestamp: message.timestamp,
+    previousTimestamp,
+    envelope: envelopeOptions,
+    body: rawText,
+  });
+
+  const ctxPayload = core.channel.reply.finalizeInboundContext({
+    Body: body,
+    BodyForAgent: rawText,
+    RawBody: rawText,
+    CommandBody: rawText,
+    From: `max:${senderId}`,
+    To: `max:${chatIdStr}`,
+    SessionKey: route.sessionKey,
+    AccountId: route.accountId,
+    ChatType: isGroup ? "group" : "direct",
+    ConversationLabel: fromLabel,
+    SenderName: senderName || undefined,
+    SenderId: senderId != null ? String(senderId) : undefined,
+    SenderUsername: senderUsername,
+    WasMentioned: isGroup ? wasMentioned : undefined,
+    Provider: "max",
+    Surface: "max",
+    MessageSid: messageId,
+    MessageSidFull: messageId,
+    ReplyToId: replyToId,
+    ReplyToIdFull: replyToId,
+    OriginatingChannel: "max",
+    OriginatingTo: `max:${chatIdStr}`,
+  });
+
+  // Record session meta
+  void core.channel.session
+    .recordSessionMetaFromInbound({
+      storePath,
+      sessionKey: ctxPayload.SessionKey ?? route.sessionKey,
+      ctx: ctxPayload,
+    })
+    .catch((err) => {
+      log?.error(`[${account.accountId}] Failed updating session meta: ${String(err)}`);
+    });
+
+  // Dispatch through the standard reply pipeline
+  const { onModelSelected, ...prefixOptions } = createReplyPrefixOptions({
+    cfg: config,
+    agentId: route.agentId,
+    channel: "max",
+    accountId: route.accountId,
+  });
+
+  await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
+    ctx: ctxPayload,
+    cfg: config,
+    dispatcherOptions: {
+      ...prefixOptions,
+      deliver: async (payload) => {
+        await deliverMaxReply({
+          payload,
+          account,
+          chatId: chatIdStr,
+          replyToId: messageId,
+          config,
+          log,
+          statusSink,
+        });
+      },
+      onError: (err, info) => {
+        log?.error(`[${account.accountId}] MAX ${info.kind} reply failed: ${String(err)}`);
+      },
+    },
+    replyOptions: {
+      onModelSelected,
+    },
+  });
+}
+
+async function processCallback(
+  callback: MaxCallback,
+  opts: MaxMonitorOptions,
+): Promise<void> {
+  const payload = callback.payload ?? "";
+  if (!payload.trim()) return;
+
+  // Synthesize as a regular message
+  const syntheticMessage: MaxMessage = {
+    sender: callback.user,
+    recipient: callback.message?.recipient ?? { chat_id: callback.user.user_id },
+    timestamp: callback.timestamp,
+    body: {
+      mid: callback.callback_id,
+      text: payload,
+    },
+  };
+
+  await processIncomingMessage(syntheticMessage, null, opts);
+}
+
+async function processBotStarted(
+  user: MaxUser,
+  chatId: number | undefined,
+  opts: MaxMonitorOptions,
+): Promise<void> {
+  // Synthesize a /start message
+  const syntheticMessage: MaxMessage = {
+    sender: user,
+    recipient: { chat_id: chatId ?? user.user_id, chat_type: "dialog" },
+    timestamp: Date.now(),
+    body: {
+      mid: `bot_started_${user.user_id}_${Date.now()}`,
+      text: "/start",
+    },
+  };
+
+  await processIncomingMessage(syntheticMessage, null, opts);
+}
+
+// ── Deliver reply ──
+
+async function deliverMaxReply(params: {
+  payload: { text?: string; mediaUrls?: string[]; mediaUrl?: string; replyToId?: string };
+  account: ResolvedMaxAccount;
+  chatId: string;
+  replyToId?: string;
+  config: OpenClawConfig;
+  log?: ChannelLogSink;
+  statusSink?: (patch: { lastInboundAt?: number; lastOutboundAt?: number }) => void;
+}): Promise<void> {
+  const { payload, account, chatId, config, log, statusSink } = params;
+  const core = getMaxRuntime();
+
+  if (payload.text) {
+    const chunkLimit = 4000; // MAX message limit
+    const chunkMode = core.channel.text.resolveChunkMode(config, "max", account.accountId);
+    const chunks = core.channel.text.chunkMarkdownTextWithMode(payload.text, chunkLimit, chunkMode);
+
+    for (const chunk of chunks) {
+      try {
+        await sendMaxMessage(chatId, chunk, {
+          token: account.token,
+          replyToMessageId: params.replyToId,
+          format: "markdown",
+        });
+        statusSink?.({ lastOutboundAt: Date.now() });
+      } catch (err) {
+        log?.error(`[${account.accountId}] MAX send failed: ${String(err)}`);
+      }
+    }
+  }
+
+  // Media URLs — send as text for now (upload support TODO)
+  const mediaList = payload.mediaUrls?.length
+    ? payload.mediaUrls
+    : payload.mediaUrl
+      ? [payload.mediaUrl]
+      : [];
+
+  for (const mediaUrl of mediaList) {
+    try {
+      await sendMaxMessage(chatId, mediaUrl, { token: account.token });
+      statusSink?.({ lastOutboundAt: Date.now() });
+    } catch (err) {
+      log?.error(`[${account.accountId}] MAX media send failed: ${String(err)}`);
+    }
+  }
+}
+
+// ── Helpers ──
+
+function formatSenderName(user?: MaxUser | null): string {
+  if (!user) return "Unknown";
+  const parts = [user.first_name];
+  if (user.last_name) parts.push(user.last_name);
+  return parts.join(" ") || user.username || `user_${user.user_id}`;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
