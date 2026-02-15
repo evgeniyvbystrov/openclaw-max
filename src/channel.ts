@@ -488,34 +488,19 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
       };
     },
 
-    collectStatusIssues: ({ account, audit }) => {
-      const issues: Array<{
-        level: "error" | "warning" | "info";
-        message: string;
-      }> = [];
+    collectStatusIssues: (accounts) => {
+      const issues: Array<{ channel: string; accountId: string; kind: string; message: string; fix?: string }> = [];
 
-      // Check token
-      if (!account.token) {
-        issues.push({
-          level: "error",
-          message: "MAX bot token not configured",
-        });
-      }
-
-      // Check audit results
-      if (audit && !audit.ok && audit.unresolvedGroups > 0) {
-        issues.push({
-          level: "warning",
-          message: `${audit.unresolvedGroups} of ${audit.checkedGroups} groups are not accessible`,
-        });
-      }
-
-      // Warn about webhook without secret
-      if (account.config.webhookUrl && !account.config.webhookSecret) {
-        issues.push({
-          level: "warning",
-          message: "Webhook URL configured without secret (webhookSecret recommended for security)",
-        });
+      for (const snapshot of accounts) {
+        if (!snapshot.configured) {
+          issues.push({
+            channel: "max",
+            accountId: snapshot.accountId,
+            kind: "config",
+            message: "MAX bot token not configured",
+            fix: "Set channels.max.botToken or MAX_BOT_TOKEN env var",
+          });
+        }
       }
 
       return issues;

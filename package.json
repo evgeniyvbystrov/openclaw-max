@@ -1,5 +1,5 @@
 {
-  "name": "openclaw-max",
+  "name": "max",
   "version": "0.1.0",
   "description": "OpenClaw channel plugin for MAX messenger (max.ru)",
   "type": "module",
@@ -20,6 +20,20 @@
     "channel-plugin"
   ],
   "license": "MIT",
+  "openclaw": {
+    "extensions": [
+      "./src/index.ts"
+    ],
+    "channel": {
+      "id": "max",
+      "label": "MAX Messenger",
+      "selectionLabel": "MAX Messenger (max.ru)",
+      "docsPath": "/channels/max",
+      "blurb": "MAX messenger bot via platform-api.max.ru.",
+      "order": 50,
+      "aliases": ["max-messenger"]
+    }
+  },
   "engines": {
     "node": ">=20"
   },
