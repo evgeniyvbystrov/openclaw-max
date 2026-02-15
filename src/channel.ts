@@ -267,42 +267,48 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   },
 
   directory: {
-    self: async ({ account }) => {
+    self: async ({ cfg, accountId }) => {
+      const account = resolveMaxAccount({ cfg, accountId });
       if (!account.token) return null;
       try {
         const api = new MaxApi({ token: account.token, timeoutMs: 3000 });
         const me = await api.getMe();
         return {
+          kind: "user" as const,
           id: String(me.user_id),
           name: me.first_name || undefined,
-          username: me.username || undefined,
-          label: me.username ? `@${me.username}` : me.first_name,
+          handle: me.username || undefined,
         };
       } catch {
         return null;
       }
     },
-    listPeers: async ({ account }) => {
+    listPeers: async ({ cfg, accountId }) => {
+      const account = resolveMaxAccount({ cfg, accountId });
       // MAX doesn't expose a full user list API. Return peers from allowFrom config.
       const allowFrom = account.config.allowFrom ?? [];
-      return allowFrom.map((id) => ({
+      return allowFrom.map((id: string | number) => ({
+        kind: "user" as const,
         id: String(id),
         name: undefined,
-        label: String(id),
       }));
     },
-    listGroups: async ({ account }) => {
+    listGroups: async ({ cfg, accountId }) => {
+      const account = resolveMaxAccount({ cfg, accountId });
       if (!account.token) return [];
       try {
         const api = new MaxApi({ token: account.token, timeoutMs: 5000 });
         const result = await api.getChats({ count: 100 });
         return (result.chats ?? [])
           .filter((chat) => chat.type === "chat" || chat.type === "channel")
-          .map((chat) => ({
-            id: String(chat.chat_id),
-            name: chat.title || undefined,
-            label: chat.title || `Chat ${chat.chat_id}`,
-          }));
+          .map((chat) => {
+            const kind: "channel" | "group" = chat.type === "channel" ? "channel" : "group";
+            return {
+              kind,
+              id: String(chat.chat_id),
+              name: chat.title || undefined,
+            };
+          });
       } catch {
         return [];
       }
@@ -557,14 +563,20 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
     },
 
     collectStatusIssues: (accounts) => {
-      const issues: Array<{ channel: string; accountId: string; kind: string; message: string; fix?: string }> = [];
+      const issues: Array<{
+        channel: string;
+        accountId: string;
+        kind: "config" | "permissions" | "auth" | "runtime" | "intent";
+        message: string;
+        fix?: string;
+      }> = [];
 
       for (const snapshot of accounts) {
         if (!snapshot.configured) {
           issues.push({
             channel: "max",
             accountId: snapshot.accountId,
-            kind: "config",
+            kind: "config" as const,
             message: "MAX bot token not configured",
             fix: "Set channels.max.botToken or MAX_BOT_TOKEN env var",
           });

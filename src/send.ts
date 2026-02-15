@@ -2,7 +2,13 @@
  * Outbound message sending for MAX.
  */
 
-import { MaxApi, type MaxNewMessageBody, type MaxSendResult, type MaxInlineKeyboardAttachment } from "./api.js";
+import {
+  MaxApi,
+  type MaxNewMessageBody,
+  type MaxSendResult,
+  type MaxInlineKeyboardAttachment,
+  type MaxAttachment,
+} from "./api.js";
 import { resolveMaxAccount } from "./accounts.js";
 import type { OpenClawConfig } from "openclaw/plugin-sdk";
 

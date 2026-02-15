@@ -12,7 +12,13 @@ import { setMaxRuntime } from "./runtime.js";
 // Re-export webhook handler for OpenClaw HTTP server
 export { handleMaxWebhookRequest } from "./webhook.js";
 
-const plugin = {
+const plugin: {
+  id: string;
+  name: string;
+  description: string;
+  configSchema: ReturnType<typeof emptyPluginConfigSchema>;
+  register(api: OpenClawPluginApi): void;
+} = {
   id: "max",
   name: "MAX Messenger",
   description: "MAX messenger channel plugin for OpenClaw",
