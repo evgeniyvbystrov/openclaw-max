@@ -198,7 +198,7 @@ async function dispatchUpdate(
       if (!update.message) break;
       // Skip edits from the bot itself
       if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
-      log?.debug?.(`[${account.accountId}] Message edited: ${update.message?.body?.mid}`);
+      log?.debug?.(`[${account.accountId}] Message edited: ${update.message?.body?.mid} text="${update.message?.body?.text ?? "<null>"}" hasBody=${!!update.message?.body}`);
       statusSink?.({ lastInboundAt: Date.now() });
       // Mark as read + show typing indicator
       const chatIdForEditRead = update.message.recipient?.chat_id;
@@ -213,10 +213,32 @@ async function dispatchUpdate(
       // Process edited message through the same pipeline as new messages.
       // Use a unique mid suffix to avoid OpenClaw dedup (same mid = skipped).
       const editedMessage = { ...update.message };
+      const originalMid = editedMessage.body.mid;
       editedMessage.body = {
         ...editedMessage.body,
-        mid: `${editedMessage.body.mid}_edited_${update.timestamp}`,
+        mid: `${originalMid}_edited_${update.timestamp}`,
       };
+
+      // MAX message_edited may not include text — fetch it from API if missing
+      if (!editedMessage.body.text?.trim() && originalMid) {
+        try {
+          const chatId = editedMessage.recipient?.chat_id;
+          if (chatId) {
+            const fetched = await opts.api.getMessages(chatId, { message_ids: [originalMid], count: 1 });
+            const fetchedMsg = fetched.messages?.[0];
+            if (fetchedMsg?.body?.text) {
+              editedMessage.body = { ...editedMessage.body, text: fetchedMsg.body.text };
+              if (fetchedMsg.body.attachments?.length) {
+                editedMessage.body.attachments = fetchedMsg.body.attachments;
+              }
+              log?.debug?.(`[${account.accountId}] Fetched edited text: "${fetchedMsg.body.text.slice(0, 50)}"`);
+            }
+          }
+        } catch (err) {
+          log?.debug?.(`[${account.accountId}] Failed to fetch edited message text: ${String(err)}`);
+        }
+      }
+
       await processIncomingMessage(editedMessage, update.user_locale, opts);
       break;
     }
