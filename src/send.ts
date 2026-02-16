@@ -235,14 +235,25 @@ export async function sendMaxContact(
   const token = resolveToken(opts);
   const api = new MaxApi({ token });
 
+  // MAX API requires either contactId (MAX user_id) or vcfInfo (VCard string)
+  // Without either, returns 400 "Missing info for contact attachment"
+  const payload: Record<string, unknown> = {};
+  if (contact.contactId != null) {
+    payload.contactId = contact.contactId;
+    if (contact.vcfPhone) payload.vcfPhone = contact.vcfPhone;
+  } else if (contact.vcfInfo) {
+    payload.vcfInfo = contact.vcfInfo;
+  } else {
+    // Generate VCard from name + phone
+    const vcfParts = ["BEGIN:VCARD", "VERSION:3.0", `FN:${contact.name}`];
+    if (contact.vcfPhone) vcfParts.push(`TEL:${contact.vcfPhone}`);
+    vcfParts.push("END:VCARD");
+    payload.vcfInfo = vcfParts.join("\n");
+  }
+
   const attachment: MaxAttachment = {
     type: "contact",
-    payload: {
-      name: contact.name,
-      ...(contact.contactId != null ? { contactId: contact.contactId } : {}),
-      ...(contact.vcfPhone ? { vcfPhone: contact.vcfPhone } : {}),
-      ...(contact.vcfInfo ? { vcfInfo: contact.vcfInfo } : {}),
-    },
+    payload,
   };
 
   const body: MaxNewMessageBody = {

@@ -253,6 +253,9 @@ export class MaxApi {
       const json = (await res.json().catch(() => null)) as T;
 
       if (!res.ok) {
+        const errDetail = json ? JSON.stringify(json) : "(no body)";
+        const bodyDetail = body ? JSON.stringify(body) : "(no body)";
+        console.error(`[MAX API] ${method} ${path} → ${res.status}: ${errDetail}\n  Request body: ${bodyDetail}`);
         throw new MaxApiError(
           `MAX API ${method} ${path} → ${res.status}`,
           res.status,
