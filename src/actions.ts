@@ -44,10 +44,12 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     if (action !== "send") {
       return null;
     }
-    const to = typeof args.target === "string" ? args.target : undefined;
+    let to = typeof args.target === "string" ? args.target : undefined;
     if (!to) {
       return null;
     }
+    // Strip provider prefix (e.g. "max:188862440" → "188862440")
+    if (to.startsWith("max:")) to = to.slice(4);
     const accountId = typeof args.accountId === "string" ? args.accountId.trim() : undefined;
     return { to, accountId };
   },
@@ -61,8 +63,14 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
       throw new Error("MAX bot token not configured");
     }
 
+    // Strip provider prefix from target (e.g. "max:188862440" → "188862440")
+    const stripPrefix = (val: string | undefined): string | undefined => {
+      if (!val) return val;
+      return val.startsWith("max:") ? val.slice(4) : val;
+    };
+
     if (action === "send") {
-      const to = readStringParam(params, "target", { required: true });
+      const to = stripPrefix(readStringParam(params, "target", { required: true }))!;
       const content = readStringParam(params, "message", {
         required: true,
         allowEmpty: true,
@@ -158,7 +166,7 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     }
 
     if (action === "sticker") {
-      const to = readStringParam(params, "to") ?? readStringParam(params, "target", { required: true });
+      const to = stripPrefix(readStringParam(params, "to") ?? readStringParam(params, "target", { required: true }))!;
       // stickerId may come as string or string[] from message tool schema
       const rawStickerId = params.stickerId;
       let stickerCode: string | undefined = Array.isArray(rawStickerId)
