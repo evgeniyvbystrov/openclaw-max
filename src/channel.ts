@@ -153,33 +153,32 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   reload: { configPrefixes: ["channels.max"] },
 
   agentPrompt: {
-    messageToolHints: ({ cfg }) => {
-      // Try to load sticker index for inline catalog
-      let stickerHint = "";
+    messageToolHints: () => {
+      // Compact sticker emoji map: top 50 emojis → sticker codes
+      // Codes are hex IDs derived from listmax.ru external_id: parseInt(extId).toString(16)
+      const emojiMap = "😂:109550b5 😊:109971b5 😍:10931eb5 🥰:10931eb5 😢:109330b5 😭:109330b5 😡:10941fb5 😱:109302b5 🤔:109308b5 👍:109368b5 👎:109323b5 ❤️:10931eb5 🔥:b4867ebb 💪:c1254bbb 🎉:10933cb5 😘:10931eb5 🤗:109b94b5 😎:10931db5 🙄:c14211bb 😴:10936eb5 😤:10941fb5 🤮:6b8bb 🤯:109302b5 😳:109302b5 🥳:10933cb5 💀:b4863ebb 🙈:b4850cbb 😏:11e4c60bb 😅:109550b5 🤣:109550b5 😋:109d2db5 😜:455b5 🤷:10d5cf5bb 😫:10936eb5 😩:10997db5 🥺:109356b5 😌:14aae3bb 😒:109323b5 🤪:455b5 😇:11e4dedbb 🙏:50cb5 💔:10997db5 👀:b48534bb ✨:11e43b2bb 😈:10941fb5 🤝:109368b5 🤦:502b5 😬:5dab4b5 🤩:5dabfb5 😶:2ae2b5";
+
+      // Also try to load full sticker-emoji-map.json for extended catalog
+      let extendedHint = "";
       try {
         const fs = require("fs");
         const path = require("path");
-        // Look for sticker-index.json relative to plugin location
         const candidates = [
-          path.join(__dirname, "..", "sticker-index.json"),
-          path.join(process.cwd(), "projects", "openclaw-max", "sticker-index.json"),
+          path.join(__dirname, "..", "sticker-emoji-map.json"),
+          path.join(process.cwd(), "projects", "openclaw-max", "sticker-emoji-map.json"),
         ];
         for (const p of candidates) {
           if (fs.existsSync(p)) {
-            const idx = JSON.parse(fs.readFileSync(p, "utf-8"));
-            const lines = Object.entries(idx)
-              .map(([code, desc]: [string, unknown]) => `${code}|${desc}`)
-              .join("\n");
-            stickerHint = `\n- MAX sticker catalog (code|description):\n${lines}`;
+            extendedHint = " Full emoji→sticker map available at: " + p;
             break;
           }
         }
       } catch {}
 
       return [
-        '- MAX stickers: use `message(action="sticker", target="CHAT_ID", stickerId="CODE")`. If stickerId is omitted, the last received sticker is sent back. To send a sticker proactively, pick a code from the catalog below matching the mood/context.',
-        stickerHint,
-      ].filter(Boolean);
+        '- MAX stickers: use `message(action="sticker", target="CHAT_ID", stickerId="CODE")`. Pick a sticker code matching the mood from the emoji map below. Each entry is emoji:hexCode.',
+        `- Sticker emoji map: ${emojiMap}${extendedHint}`,
+      ];
     },
   },
 
