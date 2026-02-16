@@ -549,11 +549,13 @@ async function processIncomingMessage(
     dispatcherOptions: {
       ...prefixOptions,
       deliver: async (payload) => {
+        // Strip _edited_<timestamp> suffix — MAX API only knows original mids
+        const replyMid = messageId.replace(/_edited_\d+$/, "");
         await deliverMaxReply({
           payload,
           account,
           chatId: chatIdStr,
-          replyToId: messageId,
+          replyToId: replyMid,
           config,
           log,
           statusSink,
@@ -636,8 +638,9 @@ async function deliverMaxReply(params: {
           format: "markdown",
         });
         statusSink?.({ lastOutboundAt: Date.now() });
-      } catch (err) {
-        log?.error(`[${account.accountId}] MAX send failed: ${String(err)}`);
+      } catch (err: unknown) {
+        const body = (err as { body?: unknown })?.body;
+        log?.error(`[${account.accountId}] MAX send failed: ${String(err)}${body ? ` body=${JSON.stringify(body)}` : ""}`);
       }
     }
   }
