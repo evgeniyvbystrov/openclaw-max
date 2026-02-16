@@ -309,6 +309,13 @@ export async function processIncomingMessage(
 
     // Media types with downloadable URL: image, sticker, video, audio, file
     if (["image", "sticker", "video", "audio", "file"].includes(attType)) {
+      // For stickers, always capture the code for outbound use
+      const stickerCode = attType === "sticker" ? ((payload?.code ?? "") as string) : "";
+      if (stickerCode) {
+        log?.debug?.(`[${account.accountId}] Sticker received: code=${stickerCode}`);
+        attachmentDescriptions.push(`[Sticker: code=${stickerCode}]`);
+      }
+
       const url = (payload?.url ?? (att as Record<string, unknown>).url ?? "") as string;
       if (url && typeof url === "string" && url.startsWith("http")) {
         try {
@@ -326,11 +333,8 @@ export async function processIncomingMessage(
           if (saved.contentType) mediaTypes.push(saved.contentType);
         } catch (err) {
           log?.error?.(`[${account.accountId}] Failed to download ${attType}: ${String(err)}`);
-          // Fall back to text description
-          if (attType === "sticker") {
-            const code = payload?.code ?? "";
-            attachmentDescriptions.push(`[Sticker${code ? `: ${code}` : ""}]`);
-          } else {
+          // Fall back to text description (sticker code already added above)
+          if (attType !== "sticker") {
             attachmentDescriptions.push(`[${attType}: ${url}]`);
           }
         }
