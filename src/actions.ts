@@ -39,12 +39,17 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     return Array.from(actions);
   },
 
+  supportsButtons: () => true,
+
   extractToolSend: ({ args }) => {
-    const action = typeof args.action === "string" ? args.action.trim() : "";
-    if (action !== "send") {
-      return null;
-    }
+    // Extract routing info for ALL actions (send, edit, delete, sticker)
+    // Core uses extractToolSend for routing all message tool actions to plugin
     let to = typeof args.target === "string" ? args.target : undefined;
+    if (!to) {
+      // For edit/delete, target may not be present — use a placeholder
+      // so core still routes to this plugin's handleAction
+      to = typeof args.messageId === "string" ? "__message_action__" : undefined;
+    }
     if (!to) {
       return null;
     }
@@ -80,6 +85,18 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
       const filePath = readStringParam(params, "filePath", { trim: false });
       const replyTo = readStringParam(params, "replyTo");
       const stickerId = readStringParam(params, "stickerId");
+
+      // Parse inline keyboard buttons: [[{text, callback_data?, url?}]]
+      let buttons: Array<Array<{ text: string; payload?: string; url?: string }>> | undefined;
+      if (params.buttons && Array.isArray(params.buttons)) {
+        buttons = (params.buttons as Array<Array<Record<string, unknown>>>).map((row) =>
+          (Array.isArray(row) ? row : [row]).map((btn) => ({
+            text: String(btn.text ?? btn.label ?? ""),
+            payload: btn.callback_data ? String(btn.callback_data) : btn.payload ? String(btn.payload) : undefined,
+            url: btn.url ? String(btn.url) : undefined,
+          }))
+        );
+      }
 
       // Sticker sending (by sticker code)
       if (stickerId) {
@@ -140,6 +157,7 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
         token: account.token,
         replyToMessageId: replyTo ?? undefined,
         format: "markdown",
+        buttons,
       });
       return jsonResult({ ok: true, to, messageId: result.messageId });
     }

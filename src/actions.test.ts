@@ -80,8 +80,14 @@ describe("MAX Message Actions", () => {
       expect(result).toEqual({ to: "123456", accountId: "prod" });
     });
 
-    it("should return null for non-send actions", () => {
+    it("should route edit/delete actions via messageId placeholder", () => {
       const args = { action: "edit", messageId: "msg-1" };
+      const result = maxMessageActions.extractToolSend({ args });
+      expect(result).toEqual({ to: "__message_action__", accountId: undefined });
+    });
+
+    it("should return null for actions without target or messageId", () => {
+      const args = { action: "edit" };
       const result = maxMessageActions.extractToolSend({ args });
       expect(result).toBeNull();
     });
