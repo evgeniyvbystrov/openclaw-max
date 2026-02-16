@@ -185,7 +185,13 @@ async function dispatchUpdate(
     }
 
     case "message_edited": {
+      if (!update.message) break;
+      // Skip edits from the bot itself
+      if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
       log?.debug?.(`[${account.accountId}] Message edited: ${update.message?.body?.mid}`);
+      statusSink?.({ lastInboundAt: Date.now() });
+      // Process edited message through the same pipeline as new messages
+      await processIncomingMessage(update.message, update.user_locale, opts);
       break;
     }
 
