@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![npm](https://img.shields.io/npm/v/openclaw-max)](https://www.npmjs.com/package/openclaw-max)
-[![Tests](https://img.shields.io/badge/tests-202%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-205%20passing-brightgreen)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
 
 Плагин канала [OpenClaw](https://github.com/openclaw/openclaw) для мессенджера **MAX** ([max.ru](https://max.ru)).
@@ -66,7 +66,8 @@ openclaw channel add max
 ### Поддержка медиа
 - ✅ **Загрузка медиа** — входящие изображения, видео, аудио, файлы, стикеры
 - ✅ **Отправка медиа** — исходящие изображения, видео, аудио, файлы через MAX CDN
-- ✅ **Поддержка стикеров** — входящие и исходящие стикеры (по коду стикера)
+- ✅ **Нативные стикеры** — отправка стикеров по коду, авто-подстановка из кеша
+- ✅ **Каталог стикеров** — 4741 стикер из 216 паков с emoji-тегами (listmax.ru)
 - ✅ **Геолокация** — вложения с местоположением
 - ✅ **Контакты** — визитные карточки
 
@@ -83,9 +84,10 @@ openclaw channel add max
 - ✅ **Обнаружение редактирования** — обработка отредактированных сообщений с уникальными идентификаторами
 - ✅ **Обработка вложений** — обработка сообщений с вложениями даже без текста
 - ✅ **Markdown и HTML** — поддержка форматирования исходящих сообщений
+- ✅ **Транскрипция аудио** — голосовые сообщения транскрибируются ядром OpenClaw
 
 ### Тестирование и качество
-- ✅ **202 теста** — комплексное покрытие тестами
+- ✅ **205 тестов** — комплексное покрытие тестами
 - ✅ **Типобезопасность** — полный TypeScript со strict mode
 - ✅ **Аудит групп** — проверка членства бота в настроенных группах
 
@@ -274,6 +276,7 @@ src/
 ├── actions.ts         # Действия с сообщениями (отправка/редактирование/удаление)
 ├── onboarding.ts      # Интерактивный визард настройки
 ├── config-schema.ts   # Zod схемы валидации
+├── sticker-cache.ts   # Кеш стикеров (авто-подстановка кода)
 └── runtime.ts         # Мост плагина с runtime
 ```
 
@@ -301,9 +304,9 @@ npm run dev
 См. [TESTING.md](./TESTING.md) для детального отчёта о покрытии тестами.
 
 **Итоги:**
-- ✅ 202 пройденных теста
+- ✅ 205 пройденных тестов (11 файлов)
 - ✅ Полное покрытие: accounts, config-schema, runtime
-- ✅ Высокое покрытие: webhook, actions, api, send, monitor
+- ✅ Высокое покрытие: webhook, actions, api, send, monitor, groups
 
 ## Справочник MAX Bot API
 

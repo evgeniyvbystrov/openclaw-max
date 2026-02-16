@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/openclaw-max)](https://www.npmjs.com/package/openclaw-max)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-202%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-205%20passing-brightgreen)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
 
 OpenClaw channel plugin for **MAX messenger** ([max.ru](https://max.ru)).
@@ -62,7 +62,8 @@ openclaw channel add max
 ### Media Support
 - ✅ **Media download** — incoming images, videos, audio, files, stickers
 - ✅ **Media upload** — outgoing images, videos, audio, files via MAX CDN
-- ✅ **Sticker support** — incoming and outgoing stickers (by sticker code)
+- ✅ **Native stickers** — send stickers by code, auto-fill from cache
+- ✅ **Sticker catalog** — 4,741 stickers from 216 packs with emoji tags (listmax.ru)
 - ✅ **Location attachments** — location sharing support
 - ✅ **Contact attachments** — contact card support
 
@@ -79,9 +80,10 @@ openclaw channel add max
 - ✅ **Edit detection** — processes edited messages with unique identifiers
 - ✅ **Attachment handling** — processes messages with attachments even without text
 - ✅ **Markdown & HTML** — format support for outbound messages
+- ✅ **Audio transcription** — voice messages transcribed by OpenClaw core
 
 ### Testing & Quality
-- ✅ **202 tests** — comprehensive test coverage
+- ✅ **205 tests** — comprehensive test coverage across 11 suites
 - ✅ **Type safety** — full TypeScript with strict mode
 - ✅ **Group audit** — verify bot membership in configured groups
 
@@ -270,6 +272,7 @@ src/
 ├── actions.ts         # Message actions (send/edit/delete)
 ├── onboarding.ts      # Interactive setup wizard
 ├── config-schema.ts   # Zod validation schemas
+├── sticker-cache.ts   # Sticker code cache (auto-fill on send)
 └── runtime.ts         # Plugin runtime bridge
 ```
 
@@ -297,9 +300,9 @@ npm run dev
 See [TESTING.md](./TESTING.md) for detailed test coverage report.
 
 **Summary:**
-- ✅ 202 tests passing
+- ✅ 205 tests passing (11 test files)
 - ✅ Full coverage: accounts, config-schema, runtime
-- ✅ High coverage: webhook, actions, api, send, monitor
+- ✅ High coverage: webhook, actions, api, send, monitor, groups
 
 ## MAX Bot API Reference
 

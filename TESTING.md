@@ -2,7 +2,7 @@
 
 ## Summary
 
-✅ **All 185+ tests passing**  
+✅ **205 tests passing (11 test files)**  
 ✅ **TypeScript compiles without errors**  
 ✅ **Ready for production use**
 
@@ -166,7 +166,19 @@ Tests for plugin runtime initialization:
 - ✅ Error on uninitialized access
 - ✅ Thread-safe access
 
-### 9. Onboarding Adapter Tests (8 tests)
+### 9. Groups Tests (64 tests)
+
+Tests for group policy and mention handling:
+- ✅ Group mention resolution (`resolveMaxGroupRequireMention`)
+- ✅ Group tool policy (`resolveMaxGroupToolPolicy`)
+- ✅ Wildcard group config
+- ✅ Per-group overrides
+- ✅ `requireMention` variations (true/false/default)
+- ✅ Policy modes: open, allowlist, disabled
+- ✅ `groupAllowFrom` filtering
+- ✅ Edge cases: missing config, empty groups, unknown chat IDs
+
+### 10. Onboarding Adapter Tests (8 tests)
 
 Tests for interactive setup wizard:
 - ✅ Status reporting
@@ -234,12 +246,12 @@ npx tsc --noEmit
 
 ## Project Statistics
 
-- **Source Files:** 11
-- **Test Files:** 10 (including monitor.test.ts)
-- **Source Lines:** ~3,100
-- **Test Lines:** ~2,400
-- **Test/Code Ratio:** 0.77 (excellent!)
-- **Total Tests:** 185+
+- **Source Files:** 12 (incl. sticker-cache.ts)
+- **Test Files:** 11 (incl. groups.test.ts)
+- **Source Lines:** ~3,500
+- **Test Lines:** ~3,000
+- **Test/Code Ratio:** 0.86 (excellent!)
+- **Total Tests:** 205
 
 ## Fixed Issues
 
@@ -271,6 +283,7 @@ The plugin is production-ready. For integration testing with a live MAX bot:
 - [ ] Bot ignores non-mention group messages (if `requireMention: true`)
 - [ ] Bot downloads incoming media
 - [ ] Bot sends outgoing media
+- [ ] Bot sends native stickers (by emoji/code)
 - [ ] Bot handles edited messages
 - [ ] Bot sends typing indicators
 - [ ] Bot marks messages as seen
