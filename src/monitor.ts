@@ -235,48 +235,76 @@ async function processIncomingMessage(
   const messageId = message.body.mid;
   const attachments = message.body.attachments ?? [];
 
-  // Describe attachments for the agent (stickers, images, files, etc.)
+  // Process attachments: download media, build descriptions for non-downloadable types
   const attachmentDescriptions: string[] = [];
+  const mediaPaths: string[] = [];
+  const mediaUrls: string[] = [];
+  const mediaTypes: string[] = [];
+
   for (const att of attachments) {
     const attType = att.type ?? "unknown";
     const payload = att.payload as Record<string, unknown> | undefined;
-    if (attType === "sticker") {
-      const code = payload?.code ?? "";
-      attachmentDescriptions.push(`[Sticker${code ? `: ${code}` : ""}]`);
-    } else if (attType === "image") {
-      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
-      attachmentDescriptions.push(`[Image${url ? `: ${url}` : ""}]`);
-    } else if (attType === "video") {
-      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
-      attachmentDescriptions.push(`[Video${url ? `: ${url}` : ""}]`);
-    } else if (attType === "audio") {
-      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
-      attachmentDescriptions.push(`[Audio${url ? `: ${url}` : ""}]`);
-    } else if (attType === "file") {
-      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
-      const filename = payload?.filename ?? "";
-      attachmentDescriptions.push(`[File${filename ? `: ${filename}` : ""}${url ? ` ${url}` : ""}]`);
+
+    // Media types with downloadable URL: image, sticker, video, audio, file
+    if (["image", "sticker", "video", "audio", "file"].includes(attType)) {
+      const url = (payload?.url ?? (att as Record<string, unknown>).url ?? "") as string;
+      if (url && typeof url === "string" && url.startsWith("http")) {
+        try {
+          const maxBytes = (account.config.mediaMaxMb ?? 20) * 1024 * 1024;
+          const fetched = await core.channel.media.fetchRemoteMedia({ url, maxBytes });
+          const saved = await core.channel.media.saveMediaBuffer(
+            Buffer.from(fetched.buffer),
+            fetched.contentType,
+            "inbound",
+            maxBytes,
+            fetched.fileName,
+          );
+          mediaPaths.push(saved.path);
+          mediaUrls.push(saved.path);
+          if (saved.contentType) mediaTypes.push(saved.contentType);
+        } catch (err) {
+          log?.error?.(`[${account.accountId}] Failed to download ${attType}: ${String(err)}`);
+          // Fall back to text description
+          if (attType === "sticker") {
+            const code = payload?.code ?? "";
+            attachmentDescriptions.push(`[Sticker${code ? `: ${code}` : ""}]`);
+          } else {
+            attachmentDescriptions.push(`[${attType}: ${url}]`);
+          }
+        }
+      } else {
+        // No URL — text description
+        if (attType === "sticker") {
+          const code = payload?.code ?? "";
+          attachmentDescriptions.push(`[Sticker${code ? `: ${code}` : ""}]`);
+        } else if (attType === "file") {
+          const filename = (att as Record<string, unknown>).filename ?? payload?.filename ?? "";
+          attachmentDescriptions.push(`[File${filename ? `: ${filename}` : ""}]`);
+        } else {
+          attachmentDescriptions.push(`[${attType}]`);
+        }
+      }
     } else if (attType === "share") {
-      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
+      const url = (payload?.url ?? (att as Record<string, unknown>).url ?? "") as string;
       attachmentDescriptions.push(`[Share${url ? `: ${url}` : ""}]`);
     } else if (attType === "location") {
-      const lat = payload?.latitude ?? "";
-      const lon = payload?.longitude ?? "";
+      const lat = (att as Record<string, unknown>).latitude ?? payload?.latitude ?? "";
+      const lon = (att as Record<string, unknown>).longitude ?? payload?.longitude ?? "";
       attachmentDescriptions.push(`[Location: ${lat}, ${lon}]`);
     } else if (attType === "contact") {
       const name = payload?.name ?? payload?.vcf_info ?? "";
       attachmentDescriptions.push(`[Contact${name ? `: ${name}` : ""}]`);
     } else if (attType !== "inline_keyboard") {
-      // Skip keyboards, log others
       attachmentDescriptions.push(`[${attType}]`);
     }
   }
 
   const attachmentText = attachmentDescriptions.join(" ");
+  const hasMedia = mediaPaths.length > 0;
   const effectiveText = rawText.trim() || attachmentText;
 
-  // Skip truly empty messages (no text AND no meaningful attachments)
-  if (!effectiveText) return;
+  // Skip truly empty messages (no text, no media, no meaningful attachments)
+  if (!effectiveText && !hasMedia) return;
 
   // Check for reply context
   const replyToId = message.link?.type === "reply" ? message.link.message?.body?.mid : undefined;
@@ -431,6 +459,13 @@ async function processIncomingMessage(
     ReplyToIdFull: replyToId,
     OriginatingChannel: "max",
     OriginatingTo: `max:${chatIdStr}`,
+    // Media attachments (downloaded to local paths)
+    MediaPath: mediaPaths[0],
+    MediaPaths: mediaPaths.length > 0 ? mediaPaths : undefined,
+    MediaUrl: mediaUrls[0],
+    MediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+    MediaType: mediaTypes[0],
+    MediaTypes: mediaTypes.length > 0 ? mediaTypes : undefined,
   });
 
   // Record session meta
