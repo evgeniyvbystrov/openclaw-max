@@ -14,13 +14,7 @@
 
 ## Быстрая установка
 
-### 1. npm (рекомендуемый)
-
-```bash
-openclaw plugins install openclaw-max && openclaw channel add max
-```
-
-### 2. git clone
+### git clone (основной способ)
 
 ```bash
 git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
@@ -37,7 +31,20 @@ git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugin
 }
 ```
 
-### 3. Пошаговая установка
+И настройте канал:
+```bash
+openclaw channel add max
+```
+
+### npm *(скоро)*
+
+```bash
+openclaw plugins install openclaw-max && openclaw channel add max
+```
+
+> Пакет `openclaw-max` пока не опубликован в npm. Следите за [релизами](https://github.com/evgeniyvbystrov/openclaw-max/releases).
+
+### Пошаговая установка
 
 1. **Клонируйте репозиторий:**
    ```bash
