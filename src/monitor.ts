@@ -173,11 +173,14 @@ async function dispatchUpdate(
       // Skip messages from the bot itself
       if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
       statusSink?.({ lastInboundAt: Date.now() });
-      // Mark message as read
+      // Mark message as read + show typing indicator
       const chatIdForRead = update.message.recipient?.chat_id;
       if (chatIdForRead) {
         opts.api.sendAction(chatIdForRead, "mark_seen").catch((err) => {
           log?.debug?.(`[${account.accountId}] mark_seen failed: ${String(err)}`);
+        });
+        opts.api.sendAction(chatIdForRead, "typing_on").catch((err) => {
+          log?.debug?.(`[${account.accountId}] typing_on failed: ${String(err)}`);
         });
       }
       await processIncomingMessage(update.message, update.user_locale, opts);
@@ -197,11 +200,14 @@ async function dispatchUpdate(
       if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
       log?.debug?.(`[${account.accountId}] Message edited: ${update.message?.body?.mid}`);
       statusSink?.({ lastInboundAt: Date.now() });
-      // Mark as read
+      // Mark as read + show typing indicator
       const chatIdForEditRead = update.message.recipient?.chat_id;
       if (chatIdForEditRead) {
         opts.api.sendAction(chatIdForEditRead, "mark_seen").catch((err) => {
           log?.debug?.(`[${account.accountId}] mark_seen failed: ${String(err)}`);
+        });
+        opts.api.sendAction(chatIdForEditRead, "typing_on").catch((err) => {
+          log?.debug?.(`[${account.accountId}] typing_on failed: ${String(err)}`);
         });
       }
       // Process edited message through the same pipeline as new messages.
