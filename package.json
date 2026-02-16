@@ -1,0 +1,75 @@
+{
+  "name": "openclaw-max",
+  "version": "0.3.2",
+  "description": "OpenClaw channel plugin for MAX messenger (max.ru)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "max",
+    "max-messenger",
+    "chatbot",
+    "channel-plugin",
+    "max-ru"
+  ],
+  "license": "MIT",
+  "author": "Evgeniy Bystrov <evgeniyvbystrov@github>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evgeniyvbystrov/openclaw-max.git"
+  },
+  "homepage": "https://github.com/evgeniyvbystrov/openclaw-max#readme",
+  "bugs": {
+    "url": "https://github.com/evgeniyvbystrov/openclaw-max/issues"
+  },
+  "openclaw": {
+    "extensions": [
+      "./src/index.ts"
+    ],
+    "channel": {
+      "id": "max",
+      "label": "MAX",
+      "selectionLabel": "MAX Messenger (max.ru)",
+      "docsPath": "/channels/max",
+      "docsLabel": "max",
+      "blurb": "Мессенджер MAX — полная интеграция через MAX Bot API.",
+      "order": 70,
+      "aliases": [
+        "max-ru"
+      ]
+    },
+    "install": {
+      "npmSpec": "openclaw-max",
+      "localPath": "extensions/openclaw-max",
+      "defaultChoice": "npm"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src/",
+    "dist/",
+    "openclaw.plugin.json",
+    "README.md",
+    "README.en.md"
+  ],
+  "peerDependencies": {
+    "openclaw": ">=2026.1.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "openclaw": "*",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
