@@ -372,6 +372,15 @@ async function processIncomingMessage(
     // so we check if the text contains @botname
     const mentionPattern = new RegExp(`@${opts.botUsername}\\b`, "i");
     wasMentioned = mentionPattern.test(rawText);
+
+    // Reply to bot's message also counts as mention (like Telegram behavior)
+    if (!wasMentioned && message.link?.type === "reply") {
+      const replySender = message.link.sender;
+      if (replySender?.is_bot && replySender?.user_id === opts.botUserId) {
+        wasMentioned = true;
+        log?.debug?.(`[${account.accountId}] Reply to bot message treated as mention`);
+      }
+    }
   }
 
   // DM security: check pairing/allowlist
