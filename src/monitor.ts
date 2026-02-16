@@ -204,8 +204,14 @@ async function dispatchUpdate(
           log?.debug?.(`[${account.accountId}] mark_seen failed: ${String(err)}`);
         });
       }
-      // Process edited message through the same pipeline as new messages
-      await processIncomingMessage(update.message, update.user_locale, opts);
+      // Process edited message through the same pipeline as new messages.
+      // Use a unique mid suffix to avoid OpenClaw dedup (same mid = skipped).
+      const editedMessage = { ...update.message };
+      editedMessage.body = {
+        ...editedMessage.body,
+        mid: `${editedMessage.body.mid}_edited_${update.timestamp}`,
+      };
+      await processIncomingMessage(editedMessage, update.user_locale, opts);
       break;
     }
 
@@ -254,6 +260,8 @@ async function processIncomingMessage(
   const rawText = message.body.text ?? "";
   const messageId = message.body.mid;
   const attachments = message.body.attachments ?? [];
+
+  log?.debug?.(`[${account.accountId}] Processing message: mid=${messageId} chatId=${message.recipient.chat_id} chatType=${message.recipient.chat_type} senderId=${message.sender?.user_id} text="${rawText.slice(0, 50)}" attachments=${attachments.length}`);
 
   // Process attachments: download media, build descriptions for non-downloadable types
   const attachmentDescriptions: string[] = [];
