@@ -21,11 +21,7 @@ openclaw channel add max
 ### git clone (alternative)
 
 ```bash
-# GitHub
 git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
-
-# GitLab
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
 ```
 
 Then add the path to `~/.openclaw/openclaw.json`:
@@ -94,12 +90,6 @@ openclaw channel add max
 - Reaction events for bots (no `message_reaction_*` events delivered)
 
 These features may be added when the MAX platform adds support.
-
-## Test Bot
-
-A test bot is available for development:
-- **Bot:** max-claw (@id781434402709_3_bot)
-- **Purpose:** Testing openclaw-max plugin features
 
 ## Setup Guide
 
@@ -352,7 +342,6 @@ MAX enforces platform-level media size limits. The plugin respects the configure
 
 - **npm:** [npmjs.com/package/openclaw-max](https://www.npmjs.com/package/openclaw-max)
 - **GitHub:** [github.com/evgeniyvbystrov/openclaw-max](https://github.com/evgeniyvbystrov/openclaw-max)
-- **GitLab:** [gitlab.byse.tech/tapchik/prototypes/openclaw-max](https://gitlab.byse.tech/tapchik/prototypes/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX for developers:** [dev.max.ru](https://dev.max.ru)
 

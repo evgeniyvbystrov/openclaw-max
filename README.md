@@ -25,11 +25,7 @@ openclaw channel add max
 ### git clone (альтернатива)
 
 ```bash
-# GitHub
 git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
-
-# GitLab
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
 ```
 
 Затем добавьте путь в `~/.openclaw/openclaw.json`:
@@ -98,12 +94,6 @@ openclaw channel add max
 - События реакций для ботов (не доставляются события `message_reaction_*`)
 
 Эти функции могут быть добавлены, когда платформа MAX добавит поддержку.
-
-## Тестовый бот
-
-Доступен тестовый бот для разработки:
-- **Бот:** max-claw (@id781434402709_3_bot)
-- **Назначение:** Тестирование функций плагина openclaw-max
 
 ## Руководство по настройке
 
@@ -366,7 +356,6 @@ MAX применяет платформенные ограничения на р
 
 - **npm:** [npmjs.com/package/openclaw-max](https://www.npmjs.com/package/openclaw-max)
 - **GitHub:** [github.com/evgeniyvbystrov/openclaw-max](https://github.com/evgeniyvbystrov/openclaw-max)
-- **GitLab:** [gitlab.byse.tech/tapchik/prototypes/openclaw-max](https://gitlab.byse.tech/tapchik/prototypes/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX для разработчиков:** [dev.max.ru](https://dev.max.ru)
 
