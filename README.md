@@ -1,6 +1,10 @@
 # OpenClaw MAX плагин
 
-Плагин канала OpenClaw для мессенджера **MAX** ([max.ru](https://max.ru)).
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-202%20passing-brightgreen)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
+
+Плагин канала [OpenClaw](https://github.com/openclaw/openclaw) для мессенджера **MAX** ([max.ru](https://max.ru)).
 
 Подключает вашего OpenClaw-агента к MAX через [MAX Bot API](https://dev.max.ru/docs-api), с поддержкой личных сообщений, групповых чатов, каналов, inline-клавиатур и медиа-вложений.
 
@@ -363,9 +367,25 @@ Webhook `message_edited` в MAX может не включать отредак�
 ### Лимиты размера медиа
 MAX применяет платформенные ограничения на размер медиа. Плагин соблюдает настроенный параметр `mediaMaxMb` (по умолчанию 20МБ) для загрузки и скачивания.
 
+## Участие в разработке
+
+1. Форкните репозиторий
+2. Создайте ветку (`git checkout -b feature/my-feature`)
+3. Закоммитьте изменения (`git commit -m 'feat: add my feature'`)
+4. Запушьте ветку (`git push origin feature/my-feature`)
+5. Откройте Pull Request
+
+Убедитесь что тесты проходят: `npm test`
+
+## Связь
+
+- **GitHub Issues:** [github.com/evgeniyvbystrov/openclaw-max/issues](https://github.com/evgeniyvbystrov/openclaw-max/issues)
+- **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
+- **MAX для разработчиков:** [dev.max.ru](https://dev.max.ru)
+
 ## Лицензия
 
-MIT
+[MIT](LICENSE)
 
 ---
 
