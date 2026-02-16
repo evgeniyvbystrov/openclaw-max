@@ -152,6 +152,12 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
 
   reload: { configPrefixes: ["channels.max"] },
 
+  agentPrompt: {
+    messageToolHints: () => [
+      "- MAX supports native sticker sending: use `action=sticker` with `stickerId=CODE` (sticker codes come from incoming sticker messages as `[Sticker: code=CODE]`).",
+    ],
+  },
+
   config: {
     listAccountIds: (cfg) => listMaxAccountIds(cfg),
     resolveAccount: (cfg, accountId) => resolveMaxAccount({ cfg, accountId }),
