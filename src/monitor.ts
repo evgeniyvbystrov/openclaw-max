@@ -233,8 +233,50 @@ async function processIncomingMessage(
 
   const rawText = message.body.text ?? "";
   const messageId = message.body.mid;
+  const attachments = message.body.attachments ?? [];
 
-  if (!rawText.trim()) return;
+  // Describe attachments for the agent (stickers, images, files, etc.)
+  const attachmentDescriptions: string[] = [];
+  for (const att of attachments) {
+    const attType = att.type ?? "unknown";
+    const payload = att.payload as Record<string, unknown> | undefined;
+    if (attType === "sticker") {
+      const code = payload?.code ?? "";
+      attachmentDescriptions.push(`[Sticker${code ? `: ${code}` : ""}]`);
+    } else if (attType === "image") {
+      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
+      attachmentDescriptions.push(`[Image${url ? `: ${url}` : ""}]`);
+    } else if (attType === "video") {
+      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
+      attachmentDescriptions.push(`[Video${url ? `: ${url}` : ""}]`);
+    } else if (attType === "audio") {
+      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
+      attachmentDescriptions.push(`[Audio${url ? `: ${url}` : ""}]`);
+    } else if (attType === "file") {
+      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
+      const filename = payload?.filename ?? "";
+      attachmentDescriptions.push(`[File${filename ? `: ${filename}` : ""}${url ? ` ${url}` : ""}]`);
+    } else if (attType === "share") {
+      const url = payload?.url ?? (att as Record<string, unknown>).url ?? "";
+      attachmentDescriptions.push(`[Share${url ? `: ${url}` : ""}]`);
+    } else if (attType === "location") {
+      const lat = payload?.latitude ?? "";
+      const lon = payload?.longitude ?? "";
+      attachmentDescriptions.push(`[Location: ${lat}, ${lon}]`);
+    } else if (attType === "contact") {
+      const name = payload?.name ?? payload?.vcf_info ?? "";
+      attachmentDescriptions.push(`[Contact${name ? `: ${name}` : ""}]`);
+    } else if (attType !== "inline_keyboard") {
+      // Skip keyboards, log others
+      attachmentDescriptions.push(`[${attType}]`);
+    }
+  }
+
+  const attachmentText = attachmentDescriptions.join(" ");
+  const effectiveText = rawText.trim() || attachmentText;
+
+  // Skip truly empty messages (no text AND no meaningful attachments)
+  if (!effectiveText) return;
 
   // Check for reply context
   const replyToId = message.link?.type === "reply" ? message.link.message?.body?.mid : undefined;
@@ -350,20 +392,27 @@ async function processIncomingMessage(
     sessionKey: route.sessionKey,
   });
 
+  // Combine text and attachment descriptions for the agent
+  const bodyForAgent = attachmentText
+    ? rawText.trim()
+      ? `${rawText.trim()}\n${attachmentText}`
+      : attachmentText
+    : rawText;
+
   const body = core.channel.reply.formatAgentEnvelope({
     channel: "MAX",
     from: fromLabel,
     timestamp: message.timestamp,
     previousTimestamp,
     envelope: envelopeOptions,
-    body: rawText,
+    body: bodyForAgent,
   });
 
   const ctxPayload = core.channel.reply.finalizeInboundContext({
     Body: body,
-    BodyForAgent: rawText,
+    BodyForAgent: bodyForAgent,
     RawBody: rawText,
-    CommandBody: rawText,
+    CommandBody: rawText || attachmentText,
     From: `max:${senderId}`,
     To: `max:${chatIdStr}`,
     SessionKey: route.sessionKey,
