@@ -36,6 +36,7 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     actions.add("edit");
     actions.add("delete");
     actions.add("sticker");
+    actions.add("sendAttachment");
     return Array.from(actions);
   },
 
@@ -248,6 +249,53 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
         replyToMessageId: replyTo ?? undefined,
       });
       return jsonResult({ ok: true, to, messageId: result.messageId });
+    }
+
+    if (action === "sendAttachment") {
+      const to = stripPrefix(readStringParam(params, "to") ?? readStringParam(params, "target", { required: true }))!;
+      const replyTo = readStringParam(params, "replyTo");
+      const caption = readStringParam(params, "message") ?? readStringParam(params, "caption") ?? "";
+      const attachType = readStringParam(params, "type") ?? readStringParam(params, "attachmentType") ?? "";
+
+      // Location attachment
+      if (attachType === "location" || params.latitude != null || params.longitude != null || readStringParam(params, "location")) {
+        const locationStr = readStringParam(params, "location");
+        let lat: number | undefined;
+        let lng: number | undefined;
+        if (params.latitude != null && params.longitude != null) {
+          lat = parseFloat(String(params.latitude));
+          lng = parseFloat(String(params.longitude));
+        } else if (locationStr) {
+          const m = locationStr.match(/(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)/);
+          if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+        }
+        if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
+          const result = await sendMaxLocation(to, { latitude: lat, longitude: lng }, caption || undefined, {
+            token: account.token,
+            replyToMessageId: replyTo ?? undefined,
+          });
+          return jsonResult({ ok: true, to, messageId: result.messageId });
+        }
+        throw new Error("Invalid location: provide latitude/longitude or location='LAT,LNG'");
+      }
+
+      // Contact attachment
+      if (attachType === "contact" || readStringParam(params, "contactName")) {
+        const contactName = readStringParam(params, "contactName") ?? readStringParam(params, "name") ?? "Unknown";
+        const contactId = params.contactId != null ? Number(params.contactId) : undefined;
+        const vcfPhone = readStringParam(params, "vcfPhone") ?? readStringParam(params, "phone");
+        const result = await sendMaxContact(to, {
+          name: contactName,
+          contactId: contactId && !isNaN(contactId) ? contactId : undefined,
+          vcfPhone: vcfPhone ?? undefined,
+        }, {
+          token: account.token,
+          replyToMessageId: replyTo ?? undefined,
+        });
+        return jsonResult({ ok: true, to, messageId: result.messageId });
+      }
+
+      throw new Error("sendAttachment: unknown type. Use type='location' or type='contact'");
     }
 
     throw new Error(`Action ${action} is not supported for provider ${providerId}.`);
