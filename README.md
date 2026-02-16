@@ -6,20 +6,56 @@ Connects your OpenClaw agent to MAX via the [MAX Bot API](https://dev.max.ru/doc
 
 ## Features
 
+### Core Functionality
 - ✅ **Long polling** — receives updates via `GET /updates`
 - ✅ **Webhook mode** — production-ready webhook support with secret verification
-- ✅ **DM & group** messages — direct messages and group chats
+- ✅ **DM & group messages** — direct messages and group chats
 - ✅ **Inline keyboards** — callback buttons via `inline_keyboard` attachments
-- ✅ **Media upload** — images, videos, audio, files via MAX CDN
 - ✅ **Message editing** — edit messages within 24h
 - ✅ **Message deletion** — delete messages within 24h
 - ✅ **Reply context** — preserves reply chains
 - ✅ **Native commands** — bot command menu registration
 - ✅ **Multi-account** — supports multiple MAX bot accounts
+
+### Media Support
+- ✅ **Media download** — incoming images, videos, audio, files, stickers
+- ✅ **Media upload** — outgoing images, videos, audio, files via MAX CDN
+- ✅ **Sticker support** — both incoming and outgoing stickers
+- ✅ **Location attachments** — location sharing support
+- ✅ **Contact attachments** — contact card support
+
+### Security & Policies
 - ✅ **Pairing / allowlist** — DM security via OpenClaw's standard pairing flow
+- ✅ **Group allowlist** — control which groups the bot responds to
+- ✅ **Mention requirement** — require @mention in groups before responding
+- ✅ **Reply-as-mention** — replying to bot's message counts as mention
+- ✅ **Group policy** — `open`, `allowlist`, or `disabled` group access
+
+### User Experience
+- ✅ **Typing indicators** — automatic `typing_on` when processing messages
+- ✅ **Read receipts** — automatic `mark_seen` for all received messages
+- ✅ **Edit detection** — processes edited messages with unique identifiers
+- ✅ **Attachment handling** — processes messages with attachments even without text
 - ✅ **Markdown & HTML** — format support for outbound messages
+
+### Testing & Quality
+- ✅ **185+ tests** — comprehensive test coverage
+- ✅ **Type safety** — full TypeScript with strict mode
 - ✅ **Group audit** — verify bot membership in configured groups
-- ✅ **Comprehensive tests** — 121 tests, >80% coverage on core modules
+
+## Platform Limitations
+
+⚠️ **MAX Bot API does not support:**
+- Emoji reactions from bots (platform limitation)
+- Reaction events for bots (no `message_reaction_*` events delivered)
+
+These features may be added when the MAX platform adds support.
+
+## Test Bot
+
+A test bot is available for development:
+- **Bot:** max-claw (@id781434402709_3_bot)
+- **Purpose:** Testing openclaw-max plugin features
 
 ## Quick Start
 
@@ -55,6 +91,11 @@ Or configure manually in `~/.openclaw/openclaw.json`:
       "enabled": true,
       "botToken": "YOUR_MAX_BOT_TOKEN"
     }
+  },
+  "plugins": {
+    "load": {
+      "paths": ["/path/to/openclaw-max"]
+    }
   }
 }
 ```
@@ -89,7 +130,8 @@ openclaw gateway start
           "requireMention": true
         }
       },
-      "groupPolicy": "allowlist"
+      "groupPolicy": "allowlist",
+      "groupAllowFrom": ["987654321"]
     }
   }
 }
@@ -149,6 +191,40 @@ openclaw gateway start
 }
 ```
 
+## Configuration Options
+
+### DM Policy (`dmPolicy`)
+- `open` — accept all DMs (default)
+- `pairing` — require pairing code
+- `allowlist` — only accept from `allowFrom` list
+- `disabled` — reject all DMs
+
+### Group Policy (`groupPolicy`)
+- `open` — respond in all groups (default)
+- `allowlist` — only respond in configured groups
+- `disabled` — ignore all group messages
+
+### Group Settings (`groups`)
+```json
+{
+  "groups": {
+    "GROUP_CHAT_ID": {
+      "requireMention": true  // Require @mention or reply to bot
+    },
+    "*": {
+      "requireMention": false  // Wildcard for all groups
+    }
+  }
+}
+```
+
+### Media Settings
+```json
+{
+  "mediaMaxMb": 20  // Maximum media file size in MB (default: 20)
+}
+```
+
 ## Architecture
 
 ```
@@ -190,10 +266,9 @@ npm run dev
 See [TESTING.md](./TESTING.md) for detailed test coverage report.
 
 **Summary:**
-- ✅ 121 tests passing
-- ✅ 100% coverage: accounts, config-schema, runtime
-- ✅ 87.5% coverage: webhook
-- ✅ 75%+ coverage: actions, api, send
+- ✅ 185+ tests passing
+- ✅ Full coverage: accounts, config-schema, runtime
+- ✅ High coverage: webhook, actions, api, send, monitor
 
 ## MAX Bot API Reference
 
@@ -206,6 +281,7 @@ See [TESTING.md](./TESTING.md) for detailed test coverage report.
 | GET    | `/updates` | Long polling |
 | POST   | `/subscriptions` | Subscribe webhook |
 | GET    | `/chats` | List chats |
+| POST   | `/actions` | Send action (typing, mark_seen) |
 
 Base URL: `https://platform-api.max.ru`
 Auth: `Authorization: <token>` header
@@ -213,27 +289,30 @@ Rate limit: 30 rps
 
 ## Update Types
 
-| Type | Description |
-|------|-------------|
-| `message_created` | New message |
-| `message_callback` | Inline keyboard button pressed |
-| `message_edited` | Message edited |
-| `message_removed` | Message deleted |
-| `bot_started` | User sent /start |
-| `bot_added` | Bot added to chat |
-| `bot_removed` | Bot removed from chat |
-| `user_added` | User joined chat |
-| `user_removed` | User left chat |
-| `chat_title_changed` | Chat title changed |
+| Type | Description | Supported |
+|------|-------------|-----------|
+| `message_created` | New message | ✅ |
+| `message_callback` | Inline keyboard button pressed | ✅ |
+| `message_edited` | Message edited | ✅ |
+| `message_removed` | Message deleted | ✅ |
+| `bot_started` | User sent /start | ✅ |
+| `bot_added` | Bot added to chat | ✅ |
+| `bot_removed` | Bot removed from chat | ✅ |
+| `user_added` | User joined chat | ⚠️ (logged) |
+| `user_removed` | User left chat | ⚠️ (logged) |
+| `chat_title_changed` | Chat title changed | ⚠️ (logged) |
+| `message_reaction_*` | Reactions | ❌ (not sent to bots) |
 
-## Future Enhancements
+## Known Issues & Workarounds
 
-- [ ] Reactions support (waiting for MAX API)
-- [ ] Media download from inbound messages
-- [ ] Typing indicators
-- [ ] Message forwarding
-- [ ] Poll creation/voting
-- [ ] Sticker support
+### Edited Messages Without Text
+MAX's `message_edited` webhook may not include the edited text. The plugin automatically fetches the full message from the API if text is missing.
+
+### Reply-as-Mention Behavior
+In groups with `requireMention: true`, replying to the bot's message counts as a mention (similar to Telegram behavior). This ensures natural conversation flow.
+
+### Media Size Limits
+MAX enforces platform-level media size limits. The plugin respects the configured `mediaMaxMb` setting (default 20MB) for both uploads and downloads.
 
 ## License
 

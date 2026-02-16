@@ -270,7 +270,11 @@ async function dispatchUpdate(
 
 // ── Process messages through OpenClaw pipeline ──
 
-async function processIncomingMessage(
+/**
+ * Process incoming MAX message through OpenClaw pipeline.
+ * @internal - Exported for testing only
+ */
+export async function processIncomingMessage(
   message: MaxMessage,
   userLocale: string | null | undefined,
   opts: MaxMonitorOptions,
