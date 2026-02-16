@@ -25,11 +25,11 @@
   "author": "Evgeniy Bystrov <evgeniyvbystrov@github>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/evgeniyvbystrov/openclaw-max.git"
+    "url": "git+https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git"
   },
-  "homepage": "https://github.com/evgeniyvbystrov/openclaw-max#readme",
+  "homepage": "https://gitlab.byse.tech/tapchik/prototypes/openclaw-max#readme",
   "bugs": {
-    "url": "https://github.com/evgeniyvbystrov/openclaw-max/issues"
+    "url": "https://gitlab.byse.tech/tapchik/prototypes/openclaw-max/-/issues"
   },
   "openclaw": {
     "extensions": [

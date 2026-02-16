@@ -5,6 +5,7 @@
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![npm](https://img.shields.io/npm/v/openclaw-max)](https://www.npmjs.com/package/openclaw-max)
 [![Tests](https://img.shields.io/badge/tests-202%20passing-brightgreen)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
 
@@ -14,10 +15,17 @@
 
 ## Быстрая установка
 
-### git clone (основной способ)
+### npm (рекомендуется)
 
 ```bash
-git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+openclaw plugins install openclaw-max
+openclaw channel add max
+```
+
+### git clone
+
+```bash
+git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
 ```
 
 Затем добавьте путь в `~/.openclaw/openclaw.json`:
@@ -36,35 +44,19 @@ git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugin
 openclaw channel add max
 ```
 
-### npm *(скоро)*
-
-```bash
-openclaw plugins install openclaw-max && openclaw channel add max
-```
-
-> Пакет `openclaw-max` пока не опубликован в npm. Следите за [релизами](https://github.com/evgeniyvbystrov/openclaw-max/releases).
-
 ### Пошаговая установка
 
-1. **Клонируйте репозиторий:**
+1. **Установите плагин:**
    ```bash
-   git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+   openclaw plugins install openclaw-max
    ```
-
-2. **Добавьте путь к плагину в OpenClaw:**
    
-   Отредактируйте `~/.openclaw/openclaw.json` и добавьте:
-   ```json
-   {
-     "plugins": {
-       "load": {
-         "paths": ["~/.openclaw/plugins/openclaw-max"]
-       }
-     }
-   }
+   Или клонируйте:
+   ```bash
+   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
    ```
 
-3. **Настройте канал:**
+2. **Настройте канал:**
    ```bash
    openclaw channel add max
    ```
@@ -114,7 +106,7 @@ openclaw channel add max --use-env
 - ✅ **Markdown и HTML** — поддержка форматирования исходящих сообщений
 
 ### Тестирование и качество
-- ✅ **185+ тестов** — комплексное покрытие тестами
+- ✅ **202 теста** — комплексное покрытие тестами
 - ✅ **Типобезопасность** — полный TypeScript со strict mode
 - ✅ **Аудит групп** — проверка членства бота в настроенных группах
 
@@ -330,7 +322,7 @@ npm run dev
 См. [TESTING.md](./TESTING.md) для детального отчёта о покрытии тестами.
 
 **Итоги:**
-- ✅ 185+ пройденных тестов
+- ✅ 202 пройденных теста
 - ✅ Полное покрытие: accounts, config-schema, runtime
 - ✅ Высокое покрытие: webhook, actions, api, send, monitor
 
@@ -390,7 +382,8 @@ MAX применяет платформенные ограничения на р
 
 ## Связь
 
-- **GitHub Issues:** [github.com/evgeniyvbystrov/openclaw-max/issues](https://github.com/evgeniyvbystrov/openclaw-max/issues)
+- **npm:** [npmjs.com/package/openclaw-max](https://www.npmjs.com/package/openclaw-max)
+- **GitLab:** [gitlab.byse.tech/tapchik/prototypes/openclaw-max](https://gitlab.byse.tech/tapchik/prototypes/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX для разработчиков:** [dev.max.ru](https://dev.max.ru)
 

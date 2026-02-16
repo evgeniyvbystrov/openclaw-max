@@ -1,43 +1,65 @@
 # OpenClaw MAX Plugin
 
+[![npm](https://img.shields.io/npm/v/openclaw-max)](https://www.npmjs.com/package/openclaw-max)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-202%20passing-brightgreen)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
+
 OpenClaw channel plugin for **MAX messenger** ([max.ru](https://max.ru)).
 
 Connects your OpenClaw agent to MAX via the [MAX Bot API](https://dev.max.ru/docs-api), supporting DMs, group chats, channels, inline keyboards, and media attachments.
 
 ## Quick Install
 
-### One-liner (copy-paste ready)
+### npm (recommended)
 
 ```bash
-git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max && echo '{"plugins":{"load":{"paths":["~/.openclaw/plugins/openclaw-max"]}}}' > /tmp/openclaw-max-plugin.json && echo "✅ Plugin cloned. Add this to your ~/.openclaw/openclaw.json → plugins.load.paths: ['~/.openclaw/plugins/openclaw-max'], then run: openclaw channel add max"
+openclaw plugins install openclaw-max
+openclaw channel add max
+```
+
+### git clone
+
+```bash
+git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+```
+
+Then add the path to `~/.openclaw/openclaw.json`:
+```json
+{
+  "plugins": {
+    "load": {
+      "paths": ["~/.openclaw/plugins/openclaw-max"]
+    }
+  }
+}
+```
+
+And configure the channel:
+```bash
+openclaw channel add max
 ```
 
 ### Step-by-step
 
-1. **Clone the plugin:**
+1. **Install the plugin:**
    ```bash
-   git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+   openclaw plugins install openclaw-max
    ```
-
-2. **Add plugin path to OpenClaw config:**
    
-   Edit `~/.openclaw/openclaw.json` and add:
-   ```json
-   {
-     "plugins": {
-       "load": {
-         "paths": ["~/.openclaw/plugins/openclaw-max"]
-       }
-     }
-   }
+   Or clone:
+   ```bash
+   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
    ```
 
-3. **Configure the channel:**
+2. **Configure the channel:**
    ```bash
    openclaw channel add max
    ```
    
    Follow the interactive wizard to set your bot token.
+
+**Where to get the token:** Open a chat with [@MasterBot](https://max.ru/masterbot) in MAX, create a bot and get the token.
 
 **Alternative:** Set bot token via environment variable:
 ```bash
@@ -80,7 +102,7 @@ openclaw channel add max --use-env
 - ✅ **Markdown & HTML** — format support for outbound messages
 
 ### Testing & Quality
-- ✅ **185+ tests** — comprehensive test coverage
+- ✅ **202 tests** — comprehensive test coverage
 - ✅ **Type safety** — full TypeScript with strict mode
 - ✅ **Group audit** — verify bot membership in configured groups
 
@@ -296,7 +318,7 @@ npm run dev
 See [TESTING.md](./TESTING.md) for detailed test coverage report.
 
 **Summary:**
-- ✅ 185+ tests passing
+- ✅ 202 tests passing
 - ✅ Full coverage: accounts, config-schema, runtime
 - ✅ High coverage: webhook, actions, api, send, monitor
 
@@ -343,6 +365,13 @@ In groups with `requireMention: true`, replying to the bot's message counts as a
 
 ### Media Size Limits
 MAX enforces platform-level media size limits. The plugin respects the configured `mediaMaxMb` setting (default 20MB) for both uploads and downloads.
+
+## Links
+
+- **npm:** [npmjs.com/package/openclaw-max](https://www.npmjs.com/package/openclaw-max)
+- **GitLab:** [gitlab.byse.tech/tapchik/prototypes/openclaw-max](https://gitlab.byse.tech/tapchik/prototypes/openclaw-max)
+- **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
+- **MAX for developers:** [dev.max.ru](https://dev.max.ru)
 
 ## License
 
