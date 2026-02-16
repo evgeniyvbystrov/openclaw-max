@@ -173,6 +173,9 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
       }
       const replyTo = readStringParam(params, "replyTo");
 
+      // Debug: log what sticker code we're sending
+      console.log(`[openclaw-max] Sending sticker: to=${to} code="${stickerCode}" rawStickerId=${JSON.stringify(rawStickerId)}`);
+
       const result = await sendMaxSticker(to, stickerCode, {
         token: account.token,
         replyToMessageId: replyTo ?? undefined,
