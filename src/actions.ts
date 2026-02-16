@@ -66,16 +66,21 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
         allowEmpty: true,
       });
       const mediaUrl = readStringParam(params, "media", { trim: false });
+      const buffer = readStringParam(params, "buffer", { trim: false });
+      const filePath = readStringParam(params, "filePath", { trim: false });
       const replyTo = readStringParam(params, "replyTo");
 
-      if (mediaUrl) {
+      // Resolve media source: media param, buffer (local path), or filePath
+      const mediaSource = mediaUrl || buffer || filePath;
+
+      if (mediaSource) {
         // Upload media from URL or local path
         const core = getMaxRuntime();
         
-        // Download if URL
-        if (mediaUrl.startsWith("http://") || mediaUrl.startsWith("https://")) {
+        // Download if URL, otherwise use as local file path
+        if (mediaSource.startsWith("http://") || mediaSource.startsWith("https://")) {
           const maxBytes = (account.config.mediaMaxMb ?? 20) * 1024 * 1024;
-          const loaded = await core.channel.media.fetchRemoteMedia({ url: mediaUrl, maxBytes });
+          const loaded = await core.channel.media.fetchRemoteMedia({ url: mediaSource, maxBytes });
           
           // Write to temp file
           const fs = await import("fs/promises");
@@ -94,8 +99,8 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
             await fs.unlink(tmpPath).catch(() => {});
           }
         } else {
-          // Local file path
-          const result = await sendMaxMediaMessage(to, content, mediaUrl, {
+          // Local file path (from media, buffer, or filePath params)
+          const result = await sendMaxMediaMessage(to, content, mediaSource, {
             token: account.token,
             replyToMessageId: replyTo ?? undefined,
             format: "markdown",
