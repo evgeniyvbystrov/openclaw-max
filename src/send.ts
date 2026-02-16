@@ -164,13 +164,13 @@ export async function sendMaxMediaMessage(
   }
 
   // Upload media
-  const { url: mediaUrl } = await api.uploadMedia(mediaType, mediaPath);
+  const uploadResult = await api.uploadMedia(mediaType, mediaPath);
 
-  // Build attachment
+  // Build attachment — MAX requires token from upload response
   const attachments: MaxAttachment[] = [
     {
-      type: mediaType,
-      payload: { url: mediaUrl },
+      type: mediaType === "image" ? "image" : mediaType === "video" ? "video" : mediaType === "audio" ? "audio" : "file",
+      payload: { token: uploadResult.token },
     },
   ];
 

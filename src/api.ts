@@ -364,28 +364,34 @@ export class MaxApi {
 
   /**
    * Upload media file to MAX.
+   * MAX upload requires multipart/form-data with field "data".
+   * Response contains a token (in photos/videos/etc) to use in attachments.
+   *
    * @param type Media type (image, video, audio, file)
    * @param data File path (string) or buffer (Buffer/Uint8Array)
    * @param contentType MIME type (optional, auto-detected for common types)
-   * @returns Upload result with URL
+   * @returns Upload result with token (for use in attachment payload)
    */
   async uploadMedia(
     type: "image" | "video" | "audio" | "file",
     data: string | Buffer | Uint8Array,
     contentType?: string,
-  ): Promise<{ url: string }> {
+  ): Promise<{ token: string; url?: string }> {
     // Step 1: Get upload URL
     const { url: uploadUrl } = await this.getUploadUrl(type);
 
     // Step 2: Load file if data is a path
     let fileBuffer: Buffer;
     let mimeType = contentType;
+    let fileName = "file";
 
     if (typeof data === "string") {
       // File path — read from disk
       const fs = await import("fs/promises");
+      const path = await import("path");
       fileBuffer = await fs.readFile(data);
-      
+      fileName = path.basename(data);
+
       // Auto-detect MIME type if not provided
       if (!mimeType) {
         const ext = data.split(".").pop()?.toLowerCase();
@@ -412,13 +418,14 @@ export class MaxApi {
       mimeType = mimeType ?? "application/octet-stream";
     }
 
-    // Step 3: POST file to upload URL
+    // Step 3: POST file as multipart/form-data to upload URL
+    const blob = new Blob([fileBuffer], { type: mimeType });
+    const formData = new FormData();
+    formData.append("data", blob, fileName);
+
     const uploadRes = await fetch(uploadUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": mimeType,
-      },
-      body: fileBuffer,
+      body: formData,
     });
 
     if (!uploadRes.ok) {
@@ -429,9 +436,32 @@ export class MaxApi {
       );
     }
 
-    // Step 4: Return the upload URL (or parse response if needed)
-    // MAX API docs say upload returns JSON with the final URL
-    const result = (await uploadRes.json().catch(() => ({ url: uploadUrl }))) as { url?: string };
-    return { url: result.url ?? uploadUrl };
+    // Step 4: Parse response to extract token
+    // Image response: { photos: { "<id>": { token: "...", url: "..." } } }
+    // Video/file etc may differ
+    const result = (await uploadRes.json().catch(() => ({}))) as Record<string, unknown>;
+
+    // Try to find token from nested response structure
+    let token = "";
+    let url: string | undefined;
+
+    if (result.photos && typeof result.photos === "object") {
+      const photos = result.photos as Record<string, { token?: string; url?: string }>;
+      const first = Object.values(photos)[0];
+      if (first?.token) { token = first.token; url = first.url; }
+    } else if (result.token && typeof result.token === "string") {
+      token = result.token;
+      url = (result.url as string) ?? undefined;
+    }
+
+    if (!token) {
+      throw new MaxApiError(
+        "MAX media upload: no token in response",
+        200,
+        result,
+      );
+    }
+
+    return { token, url };
   }
 }
