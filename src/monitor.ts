@@ -62,6 +62,8 @@ async function startMaxPollingLoop(opts: MaxMonitorOptions): Promise<void> {
           "message_callback",
           "message_edited",
           "message_removed",
+          "message_reaction_created",
+          "message_reaction_updated",
           "bot_started",
           "bot_added",
           "bot_removed",
