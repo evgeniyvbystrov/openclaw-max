@@ -34,6 +34,7 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     actions.add("send");
     actions.add("edit");
     actions.add("delete");
+    actions.add("sticker");
     return Array.from(actions);
   },
 
@@ -153,6 +154,18 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
         token: account.token,
       });
       return jsonResult({ ok: true, messageId });
+    }
+
+    if (action === "sticker") {
+      const to = readStringParam(params, "to") ?? readStringParam(params, "target", { required: true });
+      const stickerCode = readStringParam(params, "stickerId") ?? readStringParam(params, "fileId", { required: true });
+      const replyTo = readStringParam(params, "replyTo");
+
+      const result = await sendMaxSticker(to, stickerCode, {
+        token: account.token,
+        replyToMessageId: replyTo ?? undefined,
+      });
+      return jsonResult({ ok: true, to, messageId: result.messageId });
     }
 
     throw new Error(`Action ${action} is not supported for provider ${providerId}.`);
