@@ -98,6 +98,8 @@ export type MaxUpdateType =
   | "message_callback"
   | "message_edited"
   | "message_removed"
+  | "message_reaction_created"
+  | "message_reaction_updated"
   | "bot_added"
   | "bot_removed"
   | "bot_started"

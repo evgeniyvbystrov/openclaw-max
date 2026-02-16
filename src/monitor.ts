@@ -559,9 +559,11 @@ export async function processIncomingMessage(
   });
 
   // Send typing indicator while agent processes
-  opts.api.sendAction(chatIdStr, "typing_on").catch((err) => {
-    log?.debug?.(`[${account.accountId}] typing_on failed: ${String(err)}`);
-  });
+  if (chatId != null) {
+    opts.api.sendAction(chatId, "typing_on").catch((err) => {
+      log?.debug?.(`[${account.accountId}] typing_on failed: ${String(err)}`);
+    });
+  }
 
   await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
     ctx: ctxPayload,

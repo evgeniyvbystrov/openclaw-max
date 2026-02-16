@@ -25,7 +25,7 @@
   "author": "Evgeniy Bystrov <evgeniyvbystrov@github>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/evgeniyvbystrov/openclaw-max.git"
+    "url": "git+https://github.com/evgeniyvbystrov/openclaw-max.git"
   },
   "homepage": "https://github.com/evgeniyvbystrov/openclaw-max#readme",
   "bugs": {
