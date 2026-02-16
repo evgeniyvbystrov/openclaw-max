@@ -173,6 +173,13 @@ async function dispatchUpdate(
       // Skip messages from the bot itself
       if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
       statusSink?.({ lastInboundAt: Date.now() });
+      // Mark message as read
+      const chatIdForRead = update.message.recipient?.chat_id;
+      if (chatIdForRead) {
+        opts.api.sendAction(chatIdForRead, "mark_seen").catch((err) => {
+          log?.debug?.(`[${account.accountId}] mark_seen failed: ${String(err)}`);
+        });
+      }
       await processIncomingMessage(update.message, update.user_locale, opts);
       break;
     }
@@ -190,6 +197,13 @@ async function dispatchUpdate(
       if (opts.botUserId && update.message.sender?.user_id === opts.botUserId) break;
       log?.debug?.(`[${account.accountId}] Message edited: ${update.message?.body?.mid}`);
       statusSink?.({ lastInboundAt: Date.now() });
+      // Mark as read
+      const chatIdForEditRead = update.message.recipient?.chat_id;
+      if (chatIdForEditRead) {
+        opts.api.sendAction(chatIdForEditRead, "mark_seen").catch((err) => {
+          log?.debug?.(`[${account.accountId}] mark_seen failed: ${String(err)}`);
+        });
+      }
       // Process edited message through the same pipeline as new messages
       await processIncomingMessage(update.message, update.user_locale, opts);
       break;

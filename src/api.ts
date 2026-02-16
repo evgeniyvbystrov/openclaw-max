@@ -307,6 +307,12 @@ export class MaxApi {
     return this.request("GET", `/chats/${chatId}`);
   }
 
+  // ── Chat actions ──
+
+  async sendAction(chatId: number, action: "typing_on" | "sending_photo" | "sending_video" | "sending_audio" | "sending_file" | "mark_seen"): Promise<MaxSimpleResult> {
+    return this.request("POST", `/chats/${chatId}/actions`, undefined, { action });
+  }
+
   // ── Callbacks ──
 
   async answerCallback(callbackId: string, body?: { message?: MaxNewMessageBody; notification?: string }): Promise<MaxSimpleResult> {
