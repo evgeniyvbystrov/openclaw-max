@@ -154,7 +154,7 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
 
   agentPrompt: {
     messageToolHints: () => [
-      "- MAX supports native sticker sending: use `action=sticker` with `stickerId=CODE` (sticker codes come from incoming sticker messages as `[Sticker: code=CODE]`).",
+      "- MAX stickers: to send a native sticker, use `action=send` with `stickerId=CODE` (no message text needed). Sticker codes appear in incoming messages as `[Sticker: code=CODE]`. Example: `message(action=\"send\", target=\"CHAT_ID\", message=\"\", stickerId=\"676bb\")`.",
     ],
   },
 
