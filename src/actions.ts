@@ -34,7 +34,7 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     actions.add("send");
     actions.add("edit");
     actions.add("delete");
-    // Note: stickers are sent via action=send with stickerId param (not separate action)
+    actions.add("sticker");
     return Array.from(actions);
   },
 
