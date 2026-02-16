@@ -225,6 +225,84 @@ export async function sendMaxMediaMessage(
 }
 
 /**
+ * Send a contact attachment to MAX.
+ */
+export async function sendMaxContact(
+  to: string,
+  contact: { name: string; contactId?: number; vcfPhone?: string; vcfInfo?: string },
+  opts: MaxSendOptions = {},
+): Promise<{ messageId: string; raw: MaxSendResult }> {
+  const token = resolveToken(opts);
+  const api = new MaxApi({ token });
+
+  const attachment: MaxAttachment = {
+    type: "contact",
+    payload: {
+      name: contact.name,
+      ...(contact.contactId != null ? { contactId: contact.contactId } : {}),
+      ...(contact.vcfPhone ? { vcfPhone: contact.vcfPhone } : {}),
+      ...(contact.vcfInfo ? { vcfInfo: contact.vcfInfo } : {}),
+    },
+  };
+
+  const body: MaxNewMessageBody = {
+    text: opts.disableLinkPreview ? undefined : undefined, // no separate text for contact
+    attachments: [attachment],
+    notify: opts.notify,
+  };
+
+  if (opts.replyToMessageId) {
+    body.link = { type: "reply", mid: opts.replyToMessageId };
+  }
+
+  const chatId = Number(to);
+  const result = await api.sendMessage(body, { chat_id: chatId });
+
+  return {
+    messageId: result.message?.body?.mid ?? "",
+    raw: result,
+  };
+}
+
+/**
+ * Send a location attachment to MAX.
+ */
+export async function sendMaxLocation(
+  to: string,
+  location: { latitude: number; longitude: number },
+  text?: string,
+  opts: MaxSendOptions = {},
+): Promise<{ messageId: string; raw: MaxSendResult }> {
+  const token = resolveToken(opts);
+  const api = new MaxApi({ token });
+
+  const attachment: MaxAttachment = {
+    type: "location",
+    latitude: location.latitude,
+    longitude: location.longitude,
+  };
+
+  const body: MaxNewMessageBody = {
+    text: text || undefined,
+    attachments: [attachment],
+    format: opts.format ?? undefined,
+    notify: opts.notify,
+  };
+
+  if (opts.replyToMessageId) {
+    body.link = { type: "reply", mid: opts.replyToMessageId };
+  }
+
+  const chatId = Number(to);
+  const result = await api.sendMessage(body, { chat_id: chatId });
+
+  return {
+    messageId: result.message?.body?.mid ?? "",
+    raw: result,
+  };
+}
+
+/**
  * Send a sticker to MAX by sticker code.
  * Sticker codes come from incoming sticker attachments (payload.code).
  */

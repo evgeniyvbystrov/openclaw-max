@@ -178,6 +178,8 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
       return [
         '- MAX stickers: use `message(action="sticker", target="CHAT_ID", stickerId="CODE")`. Pick a sticker code matching the mood from the emoji map below. Each entry is emoji:hexCode.',
         `- Sticker emoji map: ${emojiMap}${extendedHint}`,
+        '- MAX location: use `message(action="send", target="CHAT_ID", location="LAT,LNG", message="optional caption")` to send a map pin.',
+        '- MAX contact: use `message(action="send", target="CHAT_ID", contactName="Name", vcfPhone="+7...", message="")` to send a contact card.',
       ];
     },
   },
