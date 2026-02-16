@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/openclaw-max)](https://www.npmjs.com/package/openclaw-max)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-205%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-206%20passing-brightgreen)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
 
 OpenClaw channel plugin for **MAX messenger** ([max.ru](https://max.ru)).
@@ -64,8 +64,8 @@ openclaw channel add max
 - ✅ **Media upload** — outgoing images, videos, audio, files via MAX CDN
 - ✅ **Native stickers** — send stickers by code, auto-fill from cache
 - ✅ **Sticker catalog** — 4,741 stickers from 216 packs with emoji tags (listmax.ru)
-- ✅ **Location attachments** — location sharing support
-- ✅ **Contact attachments** — contact card support
+- ✅ **Location attachments** — native map pins (Yandex Maps integration)
+- ✅ **Contact attachments** — native contact cards (VCard / MAX user_id)
 
 ### Security & Policies
 - ✅ **Pairing / allowlist** — DM security via OpenClaw's standard pairing flow
@@ -83,7 +83,7 @@ openclaw channel add max
 - ✅ **Audio transcription** — voice messages transcribed by OpenClaw core
 
 ### Testing & Quality
-- ✅ **205 tests** — comprehensive test coverage across 11 suites
+- ✅ **206 tests** — comprehensive test coverage across 11 suites
 - ✅ **Type safety** — full TypeScript with strict mode
 - ✅ **Group audit** — verify bot membership in configured groups
 
@@ -300,7 +300,7 @@ npm run dev
 See [TESTING.md](./TESTING.md) for detailed test coverage report.
 
 **Summary:**
-- ✅ 205 tests passing (11 test files)
+- ✅ 206 tests passing (11 test files)
 - ✅ Full coverage: accounts, config-schema, runtime
 - ✅ High coverage: webhook, actions, api, send, monitor, groups
 

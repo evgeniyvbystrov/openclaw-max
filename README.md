@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![npm](https://img.shields.io/npm/v/openclaw-max)](https://www.npmjs.com/package/openclaw-max)
-[![Tests](https://img.shields.io/badge/tests-205%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-206%20passing-brightgreen)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
 
 Плагин канала [OpenClaw](https://github.com/openclaw/openclaw) для мессенджера **MAX** ([max.ru](https://max.ru)).
@@ -68,8 +68,8 @@ openclaw channel add max
 - ✅ **Отправка медиа** — исходящие изображения, видео, аудио, файлы через MAX CDN
 - ✅ **Нативные стикеры** — отправка стикеров по коду, авто-подстановка из кеша
 - ✅ **Каталог стикеров** — 4741 стикер из 216 паков с emoji-тегами (listmax.ru)
-- ✅ **Геолокация** — вложения с местоположением
-- ✅ **Контакты** — визитные карточки
+- ✅ **Геолокация** — нативные вложения с картой (Яндекс Карты)
+- ✅ **Контакты** — нативные визитки (VCard / MAX user_id)
 
 ### Безопасность и политики
 - ✅ **Pairing / allowlist** — защита ЛС через стандартный механизм OpenClaw
@@ -87,7 +87,7 @@ openclaw channel add max
 - ✅ **Транскрипция аудио** — голосовые сообщения транскрибируются ядром OpenClaw
 
 ### Тестирование и качество
-- ✅ **205 тестов** — комплексное покрытие тестами
+- ✅ **206 тестов** — комплексное покрытие тестами
 - ✅ **Типобезопасность** — полный TypeScript со strict mode
 - ✅ **Аудит групп** — проверка членства бота в настроенных группах
 
@@ -304,7 +304,7 @@ npm run dev
 См. [TESTING.md](./TESTING.md) для детального отчёта о покрытии тестами.
 
 **Итоги:**
-- ✅ 205 пройденных тестов (11 файлов)
+- ✅ 206 пройденных тестов (11 файлов)
 - ✅ Полное покрытие: accounts, config-schema, runtime
 - ✅ Высокое покрытие: webhook, actions, api, send, monitor, groups
 

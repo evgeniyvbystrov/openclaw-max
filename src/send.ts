@@ -245,6 +245,7 @@ export async function sendMaxContact(
     payload.vcfInfo = contact.vcfInfo;
   } else {
     // Generate VCard from name + phone
+    // Use literal \n escape sequence for JSON serialization
     const vcfParts = ["BEGIN:VCARD", "VERSION:3.0", `FN:${contact.name}`];
     if (contact.vcfPhone) vcfParts.push(`TEL:${contact.vcfPhone}`);
     vcfParts.push("END:VCARD");
