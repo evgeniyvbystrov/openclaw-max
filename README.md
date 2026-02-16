@@ -4,6 +4,47 @@ OpenClaw channel plugin for **MAX messenger** ([max.ru](https://max.ru)).
 
 Connects your OpenClaw agent to MAX via the [MAX Bot API](https://dev.max.ru/docs-api), supporting DMs, group chats, channels, inline keyboards, and media attachments.
 
+## Quick Install
+
+### One-liner (copy-paste ready)
+
+```bash
+git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max && echo '{"plugins":{"load":{"paths":["~/.openclaw/plugins/openclaw-max"]}}}' > /tmp/openclaw-max-plugin.json && echo "✅ Plugin cloned. Add this to your ~/.openclaw/openclaw.json → plugins.load.paths: ['~/.openclaw/plugins/openclaw-max'], then run: openclaw channel add max"
+```
+
+### Step-by-step
+
+1. **Clone the plugin:**
+   ```bash
+   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+   ```
+
+2. **Add plugin path to OpenClaw config:**
+   
+   Edit `~/.openclaw/openclaw.json` and add:
+   ```json
+   {
+     "plugins": {
+       "load": {
+         "paths": ["~/.openclaw/plugins/openclaw-max"]
+       }
+     }
+   }
+   ```
+
+3. **Configure the channel:**
+   ```bash
+   openclaw channel add max
+   ```
+   
+   Follow the interactive wizard to set your bot token.
+
+**Alternative:** Set bot token via environment variable:
+```bash
+export MAX_BOT_TOKEN="your_token_here"
+openclaw channel add max --use-env
+```
+
 ## Features
 
 ### Core Functionality
@@ -57,24 +98,36 @@ A test bot is available for development:
 - **Bot:** max-claw (@id781434402709_3_bot)
 - **Purpose:** Testing openclaw-max plugin features
 
-## Quick Start
+## Quick Install
+
+**One-liner** (clone + add to OpenClaw config):
+
+```bash
+git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max && openclaw channel add max
+```
+
+Or step by step:
+
+```bash
+# 1. Clone the plugin
+git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+
+# 2. Add plugin path to OpenClaw config (~/.openclaw/openclaw.json)
+#    → plugins.load.paths: ["~/.openclaw/plugins/openclaw-max"]
+
+# 3. Run the interactive setup wizard
+openclaw channel add max
+```
+
+> **Note:** The plugin loads TypeScript directly via [jiti](https://github.com/unjs/jiti) — no build step required.
+
+## Setup Guide
 
 ### 1. Create a MAX bot
 
 Open a chat with [@MasterBot](https://max.ru/masterbot) in MAX and follow the instructions to create a bot and get an access token.
 
-### 2. Install the plugin
-
-```bash
-# From the project directory
-cd openclaw-max
-npm install
-
-# Or install globally alongside OpenClaw
-npm install -g openclaw-max
-```
-
-### 3. Configure OpenClaw
+### 2. Configure OpenClaw
 
 Run the interactive setup wizard:
 
