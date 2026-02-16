@@ -158,7 +158,10 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
 
     if (action === "sticker") {
       const to = readStringParam(params, "to") ?? readStringParam(params, "target", { required: true });
-      const stickerCode = readStringParam(params, "stickerId") ?? readStringParam(params, "fileId", { required: true });
+      const stickerCode = readStringParam(params, "stickerId") ?? readStringParam(params, "fileId");
+      if (!stickerCode) {
+        throw new Error("stickerId is required. Use a sticker code from an incoming sticker message (shown as [Sticker: code=CODE]).");
+      }
       const replyTo = readStringParam(params, "replyTo");
 
       const result = await sendMaxSticker(to, stickerCode, {
