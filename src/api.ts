@@ -170,11 +170,18 @@ export interface MaxInlineKeyboardAttachment {
   };
 }
 
+export interface MaxStickerAttachment {
+  type: "sticker";
+  payload: {
+    code: string;
+  };
+}
+
 // ────────────────────── New message body ──────────────────────
 
 export interface MaxNewMessageBody {
   text?: string | null;
-  attachments?: (MaxAttachment | MaxInlineKeyboardAttachment)[] | null;
+  attachments?: (MaxAttachment | MaxInlineKeyboardAttachment | MaxStickerAttachment)[] | null;
   link?: { type: "forward" | "reply"; mid: string } | null;
   notify?: boolean;
   format?: "markdown" | "html" | null;

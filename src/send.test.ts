@@ -9,6 +9,7 @@ import {
   editMaxMessage,
   deleteMaxMessage,
   sendMaxMediaMessage,
+  sendMaxSticker,
 } from "./send.js";
 
 const MOCK_TOKEN = "test-token";
@@ -285,6 +286,73 @@ describe("MAX Message Sending", () => {
       // Interface test - ensure function accepts expected params
       const fn = sendMaxMediaMessage;
       expect(fn.length).toBe(3); // to, caption, mediaPath
+    });
+  });
+});
+
+describe("MAX Sticker Sending", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("sendMaxSticker", () => {
+    it("should send sticker with code", async () => {
+      const mockResult = {
+        message: {
+          body: { mid: "sticker-msg-123", attachments: [{ type: "sticker", payload: { code: "test_sticker" } }] },
+          timestamp: Date.now(),
+          recipient: { chat_id: 123 },
+        },
+      };
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResult,
+      });
+
+      const result = await sendMaxSticker("123", "test_sticker", { token: MOCK_TOKEN });
+
+      expect(result.messageId).toBe("sticker-msg-123");
+      expect(global.fetch).toHaveBeenCalled();
+
+      const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+      expect(url).toContain("/messages");
+      expect(url).toContain("chat_id=123");
+      const body = JSON.parse(init.body as string);
+      expect(body.attachments).toEqual([
+        { type: "sticker", payload: { code: "test_sticker" } },
+      ]);
+      expect(body.text).toBeUndefined();
+    });
+
+    it("should send sticker with reply context", async () => {
+      const mockResult = {
+        message: {
+          body: { mid: "sticker-reply-456" },
+          timestamp: Date.now(),
+          recipient: { chat_id: 456 },
+        },
+      };
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResult,
+      });
+
+      const result = await sendMaxSticker("456", "reply_sticker_code", {
+        token: MOCK_TOKEN,
+        replyToMessageId: "original-msg-789",
+      });
+
+      expect(result.messageId).toBe("sticker-reply-456");
+      const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(init.body as string);
+      expect(body.link).toEqual({ type: "reply", mid: "original-msg-789" });
+    });
+
+    it("should be a function with correct signature", () => {
+      expect(typeof sendMaxSticker).toBe("function");
+      expect(sendMaxSticker.length).toBe(2); // to, stickerCode (opts is optional)
     });
   });
 });

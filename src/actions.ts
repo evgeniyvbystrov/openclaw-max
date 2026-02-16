@@ -13,7 +13,7 @@ import {
   readStringParam,
 } from "openclaw/plugin-sdk";
 import { listMaxAccountIds, resolveMaxAccount } from "./accounts.js";
-import { sendMaxMessage, editMaxMessage, deleteMaxMessage, sendMaxMediaMessage } from "./send.js";
+import { sendMaxMessage, editMaxMessage, deleteMaxMessage, sendMaxMediaMessage, sendMaxSticker } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
 
 const providerId = "max";
@@ -69,6 +69,23 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
       const buffer = readStringParam(params, "buffer", { trim: false });
       const filePath = readStringParam(params, "filePath", { trim: false });
       const replyTo = readStringParam(params, "replyTo");
+      const stickerId = readStringParam(params, "stickerId");
+
+      // Sticker sending (by sticker code)
+      if (stickerId) {
+        // stickerId can be a single id or comma-separated
+        const codes = Array.isArray(params.stickerId)
+          ? (params.stickerId as string[])
+          : [stickerId];
+        const firstCode = codes[0];
+        if (firstCode) {
+          const result = await sendMaxSticker(to, firstCode, {
+            token: account.token,
+            replyToMessageId: replyTo ?? undefined,
+          });
+          return jsonResult({ ok: true, to, messageId: result.messageId });
+        }
+      }
 
       // Resolve media source: media param, buffer (local path), or filePath
       const mediaSource = mediaUrl || buffer || filePath;

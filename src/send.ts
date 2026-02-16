@@ -7,6 +7,7 @@ import {
   type MaxNewMessageBody,
   type MaxSendResult,
   type MaxInlineKeyboardAttachment,
+  type MaxStickerAttachment,
   type MaxAttachment,
 } from "./api.js";
 import { resolveMaxAccount } from "./accounts.js";
@@ -214,6 +215,45 @@ export async function sendMaxMediaMessage(
   if (opts.disableLinkPreview) {
     params.disable_link_preview = true;
   }
+
+  const result = await api.sendMessage(body, params);
+
+  return {
+    messageId: result.message?.body?.mid ?? "",
+    raw: result,
+  };
+}
+
+/**
+ * Send a sticker to MAX by sticker code.
+ * Sticker codes come from incoming sticker attachments (payload.code).
+ */
+export async function sendMaxSticker(
+  to: string,
+  stickerCode: string,
+  opts: MaxSendOptions = {},
+): Promise<{ messageId: string; raw: MaxSendResult }> {
+  const token = resolveToken(opts);
+  const api = new MaxApi({ token });
+
+  const stickerAttachment: MaxStickerAttachment = {
+    type: "sticker",
+    payload: { code: stickerCode },
+  };
+
+  const body: MaxNewMessageBody = {
+    attachments: [stickerAttachment],
+    notify: opts.notify,
+  };
+
+  if (opts.replyToMessageId) {
+    body.link = { type: "reply", mid: opts.replyToMessageId };
+  }
+
+  const chatId = Number(to);
+  const params: { chat_id?: number; disable_link_preview?: boolean } = {
+    chat_id: chatId,
+  };
 
   const result = await api.sendMessage(body, params);
 
