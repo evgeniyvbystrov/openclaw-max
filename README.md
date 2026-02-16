@@ -1,5 +1,9 @@
 # OpenClaw MAX плагин
 
+<p align="center">
+  <img src="assets/social-preview.png" alt="OpenClaw MAX Plugin" width="640">
+</p>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-202%20passing-brightgreen)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)]()
