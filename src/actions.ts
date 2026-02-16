@@ -13,6 +13,7 @@ import {
   readStringParam,
 } from "openclaw/plugin-sdk";
 import { listMaxAccountIds, resolveMaxAccount } from "./accounts.js";
+import { getLastStickerCode } from "./sticker-cache.js";
 import { sendMaxMessage, editMaxMessage, deleteMaxMessage, sendMaxMediaMessage, sendMaxSticker } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
 
@@ -158,9 +159,13 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
 
     if (action === "sticker") {
       const to = readStringParam(params, "to") ?? readStringParam(params, "target", { required: true });
-      const stickerCode = readStringParam(params, "stickerId") ?? readStringParam(params, "fileId");
+      let stickerCode = readStringParam(params, "stickerId") ?? readStringParam(params, "fileId");
+      // Auto-fill from last received sticker if not provided
       if (!stickerCode) {
-        throw new Error("stickerId is required. Use a sticker code from an incoming sticker message (shown as [Sticker: code=CODE]).");
+        stickerCode = getLastStickerCode(to) ?? getLastStickerCode() ?? undefined;
+      }
+      if (!stickerCode) {
+        throw new Error("stickerId is required. Send a sticker first, then ask to send it back.");
       }
       const replyTo = readStringParam(params, "replyTo");
 

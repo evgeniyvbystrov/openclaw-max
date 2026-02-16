@@ -11,6 +11,7 @@ import { MaxApi, type MaxUpdate, type MaxMessage, type MaxUser, type MaxCallback
 import { resolveMaxAccount, type ResolvedMaxAccount } from "./accounts.js";
 import { sendMaxMessage, sendMaxMediaMessage } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
+import { rememberStickerCode } from "./sticker-cache.js";
 import {
   registerMaxWebhookTarget,
   resolveMaxWebhookPath,
@@ -314,6 +315,9 @@ export async function processIncomingMessage(
       if (stickerCode) {
         log?.debug?.(`[${account.accountId}] Sticker received: code=${stickerCode}`);
         attachmentDescriptions.push(`[Sticker: code=${stickerCode}]`);
+        if (chatId != null) {
+          rememberStickerCode(chatId, stickerCode);
+        }
       }
 
       const url = (payload?.url ?? (att as Record<string, unknown>).url ?? "") as string;
