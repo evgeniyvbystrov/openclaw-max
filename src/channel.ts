@@ -153,9 +153,34 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   reload: { configPrefixes: ["channels.max"] },
 
   agentPrompt: {
-    messageToolHints: () => [
-      '- MAX stickers: to send a native sticker, use `message(action="sticker", target="CHAT_ID", stickerId="CODE")`. Sticker codes appear in incoming messages as `[Sticker: code=CODE]`. You MUST pass the stickerId parameter with the code. Example: if you see `[Sticker: code=df7a25bb]`, call `message(action="sticker", target="188862440", stickerId="df7a25bb")`.',
-    ],
+    messageToolHints: ({ cfg }) => {
+      // Try to load sticker index for inline catalog
+      let stickerHint = "";
+      try {
+        const fs = require("fs");
+        const path = require("path");
+        // Look for sticker-index.json relative to plugin location
+        const candidates = [
+          path.join(__dirname, "..", "sticker-index.json"),
+          path.join(process.cwd(), "projects", "openclaw-max", "sticker-index.json"),
+        ];
+        for (const p of candidates) {
+          if (fs.existsSync(p)) {
+            const idx = JSON.parse(fs.readFileSync(p, "utf-8"));
+            const lines = Object.entries(idx)
+              .map(([code, desc]: [string, unknown]) => `${code}|${desc}`)
+              .join("\n");
+            stickerHint = `\n- MAX sticker catalog (code|description):\n${lines}`;
+            break;
+          }
+        }
+      } catch {}
+
+      return [
+        '- MAX stickers: use `message(action="sticker", target="CHAT_ID", stickerId="CODE")`. If stickerId is omitted, the last received sticker is sent back. To send a sticker proactively, pick a code from the catalog below matching the mood/context.',
+        stickerHint,
+      ].filter(Boolean);
+    },
   },
 
   config: {
