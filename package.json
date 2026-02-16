@@ -1,5 +1,5 @@
 {
-  "name": "max",
+  "name": "openclaw-max",
   "version": "0.1.0",
   "description": "OpenClaw channel plugin for MAX messenger (max.ru)",
   "type": "module",
@@ -14,12 +14,23 @@
   },
   "keywords": [
     "openclaw",
+    "openclaw-plugin",
     "max",
-    "messenger",
+    "max-messenger",
     "chatbot",
-    "channel-plugin"
+    "channel-plugin",
+    "max-ru"
   ],
   "license": "MIT",
+  "author": "Evgeniy Bystrov <evgeniyvbystrov@github>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evgeniyvbystrov/openclaw-max.git"
+  },
+  "homepage": "https://github.com/evgeniyvbystrov/openclaw-max#readme",
+  "bugs": {
+    "url": "https://github.com/evgeniyvbystrov/openclaw-max/issues"
+  },
   "openclaw": {
     "extensions": [
       "./src/index.ts"
@@ -46,9 +57,11 @@
     "node": ">=20"
   },
   "files": [
+    "src/",
     "dist/",
     "openclaw.plugin.json",
-    "README.md"
+    "README.md",
+    "README.en.md"
   ],
   "peerDependencies": {
     "openclaw": ">=2026.1.0"

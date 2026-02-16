@@ -15,7 +15,7 @@ openclaw plugins install openclaw-max && openclaw channel add max
 ### 2. git clone
 
 ```bash
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
 ```
 
 Затем добавьте путь в `~/.openclaw/openclaw.json`:
@@ -33,7 +33,7 @@ git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.opencl
 
 1. **Клонируйте репозиторий:**
    ```bash
-   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+   git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
    ```
 
 2. **Добавьте путь к плагину в OpenClaw:**

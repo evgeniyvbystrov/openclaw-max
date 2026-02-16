@@ -9,14 +9,14 @@ Connects your OpenClaw agent to MAX via the [MAX Bot API](https://dev.max.ru/doc
 ### One-liner (copy-paste ready)
 
 ```bash
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max && echo '{"plugins":{"load":{"paths":["~/.openclaw/plugins/openclaw-max"]}}}' > /tmp/openclaw-max-plugin.json && echo "✅ Plugin cloned. Add this to your ~/.openclaw/openclaw.json → plugins.load.paths: ['~/.openclaw/plugins/openclaw-max'], then run: openclaw channel add max"
+git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max && echo '{"plugins":{"load":{"paths":["~/.openclaw/plugins/openclaw-max"]}}}' > /tmp/openclaw-max-plugin.json && echo "✅ Plugin cloned. Add this to your ~/.openclaw/openclaw.json → plugins.load.paths: ['~/.openclaw/plugins/openclaw-max'], then run: openclaw channel add max"
 ```
 
 ### Step-by-step
 
 1. **Clone the plugin:**
    ```bash
-   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+   git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
    ```
 
 2. **Add plugin path to OpenClaw config:**
