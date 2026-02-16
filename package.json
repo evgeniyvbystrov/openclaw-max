@@ -26,14 +26,20 @@
     ],
     "channel": {
       "id": "max",
-      "label": "MAX Messenger",
+      "label": "MAX",
       "selectionLabel": "MAX Messenger (max.ru)",
       "docsPath": "/channels/max",
-      "blurb": "MAX messenger bot via platform-api.max.ru.",
-      "order": 50,
+      "docsLabel": "max",
+      "blurb": "Мессенджер MAX — полная интеграция через MAX Bot API.",
+      "order": 70,
       "aliases": [
-        "max-messenger"
+        "max-ru"
       ]
+    },
+    "install": {
+      "npmSpec": "openclaw-max",
+      "localPath": "extensions/openclaw-max",
+      "defaultChoice": "npm"
     }
   },
   "engines": {

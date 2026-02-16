@@ -1,27 +1,44 @@
-# OpenClaw MAX Plugin
+# OpenClaw MAX плагин
 
-OpenClaw channel plugin for **MAX messenger** ([max.ru](https://max.ru)).
+Плагин канала OpenClaw для мессенджера **MAX** ([max.ru](https://max.ru)).
 
-Connects your OpenClaw agent to MAX via the [MAX Bot API](https://dev.max.ru/docs-api), supporting DMs, group chats, channels, inline keyboards, and media attachments.
+Подключает вашего OpenClaw-агента к MAX через [MAX Bot API](https://dev.max.ru/docs-api), с поддержкой личных сообщений, групповых чатов, каналов, inline-клавиатур и медиа-вложений.
 
-## Quick Install
+## Быстрая установка
 
-### One-liner (copy-paste ready)
+### 1. npm (рекомендуемый)
 
 ```bash
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max && echo '{"plugins":{"load":{"paths":["~/.openclaw/plugins/openclaw-max"]}}}' > /tmp/openclaw-max-plugin.json && echo "✅ Plugin cloned. Add this to your ~/.openclaw/openclaw.json → plugins.load.paths: ['~/.openclaw/plugins/openclaw-max'], then run: openclaw channel add max"
+openclaw plugins install openclaw-max && openclaw channel add max
 ```
 
-### Step-by-step
+### 2. git clone
 
-1. **Clone the plugin:**
+```bash
+git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+```
+
+Затем добавьте путь в `~/.openclaw/openclaw.json`:
+```json
+{
+  "plugins": {
+    "load": {
+      "paths": ["~/.openclaw/plugins/openclaw-max"]
+    }
+  }
+}
+```
+
+### 3. Пошаговая установка
+
+1. **Клонируйте репозиторий:**
    ```bash
    git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
    ```
 
-2. **Add plugin path to OpenClaw config:**
+2. **Добавьте путь к плагину в OpenClaw:**
    
-   Edit `~/.openclaw/openclaw.json` and add:
+   Отредактируйте `~/.openclaw/openclaw.json` и добавьте:
    ```json
    {
      "plugins": {
@@ -32,127 +49,129 @@ git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.opencl
    }
    ```
 
-3. **Configure the channel:**
+3. **Настройте канал:**
    ```bash
    openclaw channel add max
    ```
    
-   Follow the interactive wizard to set your bot token.
+   Визард запросит токен бота.
 
-**Alternative:** Set bot token via environment variable:
+**Где взять токен:** Откройте чат с [@MasterBot](https://max.ru/masterbot) в MAX, создайте бота и получите токен.
+
+**Альтернатива:** Токен через переменную окружения:
 ```bash
 export MAX_BOT_TOKEN="your_token_here"
 openclaw channel add max --use-env
 ```
 
-## Features
+## Возможности
 
-### Core Functionality
-- ✅ **Long polling** — receives updates via `GET /updates`
-- ✅ **Webhook mode** — production-ready webhook support with secret verification
-- ✅ **DM & group messages** — direct messages and group chats
-- ✅ **Inline keyboards** — callback buttons via `inline_keyboard` attachments
-- ✅ **Message editing** — edit messages within 24h
-- ✅ **Message deletion** — delete messages within 24h
-- ✅ **Reply context** — preserves reply chains
-- ✅ **Native commands** — bot command menu registration
-- ✅ **Multi-account** — supports multiple MAX bot accounts
+### Основная функциональность
+- ✅ **Long polling** — получение обновлений через `GET /updates`
+- ✅ **Webhook режим** — production-ready поддержка webhook с проверкой секрета
+- ✅ **ЛС и группы** — личные сообщения и групповые чаты
+- ✅ **Inline-клавиатуры** — кнопки через `inline_keyboard` вложения
+- ✅ **Редактирование сообщений** — редактирование в течение 24ч
+- ✅ **Удаление сообщений** — удаление в течение 24ч
+- ✅ **Контекст ответов** — сохранение цепочек ответов
+- ✅ **Нативные команды** — регистрация меню команд бота
+- ✅ **Мульти-аккаунт** — поддержка нескольких MAX-ботов
 
-### Media Support
-- ✅ **Media download** — incoming images, videos, audio, files, stickers
-- ✅ **Media upload** — outgoing images, videos, audio, files via MAX CDN
-- ✅ **Sticker support** — both incoming and outgoing stickers
-- ✅ **Location attachments** — location sharing support
-- ✅ **Contact attachments** — contact card support
+### Поддержка медиа
+- ✅ **Загрузка медиа** — входящие изображения, видео, аудио, файлы, стикеры
+- ✅ **Отправка медиа** — исходящие изображения, видео, аудио, файлы через MAX CDN
+- ✅ **Поддержка стикеров** — входящие и исходящие стикеры
+- ✅ **Геолокация** — вложения с местоположением
+- ✅ **Контакты** — визитные карточки
 
-### Security & Policies
-- ✅ **Pairing / allowlist** — DM security via OpenClaw's standard pairing flow
-- ✅ **Group allowlist** — control which groups the bot responds to
-- ✅ **Mention requirement** — require @mention in groups before responding
-- ✅ **Reply-as-mention** — replying to bot's message counts as mention
-- ✅ **Group policy** — `open`, `allowlist`, or `disabled` group access
+### Безопасность и политики
+- ✅ **Pairing / allowlist** — защита ЛС через стандартный механизм OpenClaw
+- ✅ **Allowlist групп** — контроль групп, в которых бот отвечает
+- ✅ **Требование упоминания** — требовать @mention в группах перед ответом
+- ✅ **Ответ как упоминание** — ответ на сообщение бота считается упоминанием
+- ✅ **Политика групп** — `open`, `allowlist` или `disabled` доступ к группам
 
-### User Experience
-- ✅ **Typing indicators** — automatic `typing_on` when processing messages
-- ✅ **Read receipts** — automatic `mark_seen` for all received messages
-- ✅ **Edit detection** — processes edited messages with unique identifiers
-- ✅ **Attachment handling** — processes messages with attachments even without text
-- ✅ **Markdown & HTML** — format support for outbound messages
+### Пользовательский опыт
+- ✅ **Индикаторы набора** — автоматический `typing_on` при обработке сообщений
+- ✅ **Отметки о прочтении** — автоматический `mark_seen` для всех полученных сообщений
+- ✅ **Обнаружение редактирования** — обработка отредактированных сообщений с уникальными идентификаторами
+- ✅ **Обработка вложений** — обработка сообщений с вложениями даже без текста
+- ✅ **Markdown и HTML** — поддержка форматирования исходящих сообщений
 
-### Testing & Quality
-- ✅ **185+ tests** — comprehensive test coverage
-- ✅ **Type safety** — full TypeScript with strict mode
-- ✅ **Group audit** — verify bot membership in configured groups
+### Тестирование и качество
+- ✅ **185+ тестов** — комплексное покрытие тестами
+- ✅ **Типобезопасность** — полный TypeScript со strict mode
+- ✅ **Аудит групп** — проверка членства бота в настроенных группах
 
-## Platform Limitations
+## Ограничения платформы
 
-⚠️ **MAX Bot API does not support:**
-- Emoji reactions from bots (platform limitation)
-- Reaction events for bots (no `message_reaction_*` events delivered)
+⚠️ **MAX Bot API не поддерживает:**
+- Emoji-реакции от ботов (ограничение платформы)
+- События реакций для ботов (не доставляются события `message_reaction_*`)
 
-These features may be added when the MAX platform adds support.
+Эти функции могут быть добавлены, когда платформа MAX добавит поддержку.
 
-## Test Bot
+## Тестовый бот
 
-A test bot is available for development:
-- **Bot:** max-claw (@id781434402709_3_bot)
-- **Purpose:** Testing openclaw-max plugin features
+Доступен тестовый бот для разработки:
+- **Бот:** max-claw (@id781434402709_3_bot)
+- **Назначение:** Тестирование функций плагина openclaw-max
 
-## Setup Guide
+## Руководство по настройке
 
-### 1. Create a MAX bot
+### 1. Создайте MAX-бота
 
-Open a chat with [@MasterBot](https://max.ru/masterbot) in MAX and follow the instructions to create a bot and get an access token.
+Откройте чат с [@MasterBot](https://max.ru/masterbot) в MAX и следуйте инструкциям для создания бота и получения токена доступа.
 
-### 2. Configure OpenClaw
+### 2. Настройте OpenClaw
 
-Run the interactive setup wizard:
+Запустите интерактивный визард настройки:
 
 ```bash
 openclaw channel add max
 ```
 
-Or configure manually in `~/.openclaw/openclaw.json`:
+Или настройте вручную в `~/.openclaw/openclaw.json`:
 
 ```json
 {
   "channels": {
     "max": {
       "enabled": true,
-      "botToken": "YOUR_MAX_BOT_TOKEN"
+      "botToken": "ВАШ_MAX_BOT_TOKEN"
     }
   },
   "plugins": {
     "load": {
-      "paths": ["/path/to/openclaw-max"]
+      "paths": ["/путь/к/openclaw-max"]
     }
   }
 }
 ```
 
-Or use environment variable:
+Или используйте переменную окружения:
 
 ```bash
 export MAX_BOT_TOKEN="your_token_here"
 openclaw channel add max --use-env
 ```
 
-### 4. Start OpenClaw
+### 3. Запустите OpenClaw
 
 ```bash
 openclaw gateway start
 ```
 
-## Configuration
+## Конфигурация
 
-### Single account (polling mode)
+### Один аккаунт (polling режим)
 
 ```json
 {
   "channels": {
     "max": {
       "enabled": true,
-      "botToken": "token_here",
+      "botToken": "токен_здесь",
       "dmPolicy": "pairing",
       "allowFrom": ["12345678"],
       "groups": {
@@ -167,34 +186,34 @@ openclaw gateway start
 }
 ```
 
-### Webhook mode (recommended for production)
+### Webhook режим (рекомендуется для production)
 
 ```json
 {
   "channels": {
     "max": {
       "enabled": true,
-      "botToken": "token_here",
-      "webhookUrl": "https://your-domain.com/max-webhook",
-      "webhookSecret": "random-secret-string",
+      "botToken": "токен_здесь",
+      "webhookUrl": "https://ваш-домен.com/max-webhook",
+      "webhookSecret": "случайная-секретная-строка",
       "webhookPath": "/max-webhook"
     }
   }
 }
 ```
 
-### Multiple accounts
+### Несколько аккаунтов
 
 ```json
 {
   "channels": {
     "max": {
       "enabled": true,
-      "botToken": "default_bot_token",
+      "botToken": "токен_основного_бота",
       "accounts": {
         "secondary": {
           "enabled": true,
-          "botToken": "another_bot_token",
+          "botToken": "токен_другого_бота",
           "allowFrom": ["87654321"]
         }
       }
@@ -203,147 +222,151 @@ openclaw gateway start
 }
 ```
 
-### Bot commands
+### Команды бота
 
 ```json
 {
   "channels": {
     "max": {
       "enabled": true,
-      "botToken": "token_here",
+      "botToken": "токен_здесь",
       "commands": [
-        { "name": "start", "description": "Start conversation" },
-        { "name": "help", "description": "Show help" },
-        { "name": "status", "description": "Bot status" }
+        { "name": "start", "description": "Начать разговор" },
+        { "name": "help", "description": "Показать справку" },
+        { "name": "status", "description": "Статус бота" }
       ]
     }
   }
 }
 ```
 
-## Configuration Options
+## Параметры конфигурации
 
-### DM Policy (`dmPolicy`)
-- `open` — accept all DMs (default)
-- `pairing` — require pairing code
-- `allowlist` — only accept from `allowFrom` list
-- `disabled` — reject all DMs
+### Политика ЛС (`dmPolicy`)
+- `open` — принимать все ЛС (по умолчанию)
+- `pairing` — требовать код подключения
+- `allowlist` — принимать только из списка `allowFrom`
+- `disabled` — отклонять все ЛС
 
-### Group Policy (`groupPolicy`)
-- `open` — respond in all groups (default)
-- `allowlist` — only respond in configured groups
-- `disabled` — ignore all group messages
+### Политика групп (`groupPolicy`)
+- `open` — отвечать во всех группах (по умолчанию)
+- `allowlist` — отвечать только в настроенных группах
+- `disabled` — игнорировать все групповые сообщения
 
-### Group Settings (`groups`)
+### Настройки групп (`groups`)
 ```json
 {
   "groups": {
-    "GROUP_CHAT_ID": {
-      "requireMention": true  // Require @mention or reply to bot
+    "ID_ГРУППОВОГО_ЧАТА": {
+      "requireMention": true  // Требовать @mention или ответ боту
     },
     "*": {
-      "requireMention": false  // Wildcard for all groups
+      "requireMention": false  // Wildcard для всех групп
     }
   }
 }
 ```
 
-### Media Settings
+### Настройки медиа
 ```json
 {
-  "mediaMaxMb": 20  // Maximum media file size in MB (default: 20)
+  "mediaMaxMb": 20  // Максимальный размер медиа-файла в МБ (по умолчанию: 20)
 }
 ```
 
-## Architecture
+## Архитектура
 
 ```
 src/
-├── index.ts           # Plugin entry point (registers with OpenClaw)
-├── api.ts             # MAX Bot API client (thin HTTP wrapper)
-├── accounts.ts        # Account resolution from config
-├── channel.ts         # ChannelPlugin implementation (main interface)
-├── monitor.ts         # Long-polling + webhook update receiver
-├── webhook.ts         # Webhook HTTP handler
-├── send.ts            # Outbound message sending (text + media)
-├── actions.ts         # Message actions (send/edit/delete)
-├── onboarding.ts      # Interactive setup wizard
-├── config-schema.ts   # Zod validation schemas
-└── runtime.ts         # Plugin runtime bridge
+├── index.ts           # Точка входа плагина (регистрация в OpenClaw)
+├── api.ts             # MAX Bot API клиент (тонкая HTTP-обёртка)
+├── accounts.ts        # Разрешение аккаунтов из конфига
+├── channel.ts         # Реализация ChannelPlugin (основной интерфейс)
+├── monitor.ts         # Long-polling + webhook приёмник обновлений
+├── webhook.ts         # HTTP-обработчик webhook
+├── send.ts            # Отправка исходящих сообщений (текст + медиа)
+├── actions.ts         # Действия с сообщениями (отправка/редактирование/удаление)
+├── onboarding.ts      # Интерактивный визард настройки
+├── config-schema.ts   # Zod схемы валидации
+└── runtime.ts         # Мост плагина с runtime
 ```
 
-## Development
+## Разработка
 
 ```bash
-# Install dependencies
+# Установить зависимости
 npm install
 
-# Build
+# Собрать
 npm run build
 
-# Run tests
+# Запустить тесты
 npm test
 
-# Run tests with coverage
+# Запустить тесты с покрытием
 npm test -- --coverage.enabled
 
-# Watch mode (development)
+# Режим отслеживания (разработка)
 npm run dev
 ```
 
-## Testing
+## Тестирование
 
-See [TESTING.md](./TESTING.md) for detailed test coverage report.
+См. [TESTING.md](./TESTING.md) для детального отчёта о покрытии тестами.
 
-**Summary:**
-- ✅ 185+ tests passing
-- ✅ Full coverage: accounts, config-schema, runtime
-- ✅ High coverage: webhook, actions, api, send, monitor
+**Итоги:**
+- ✅ 185+ пройденных тестов
+- ✅ Полное покрытие: accounts, config-schema, runtime
+- ✅ Высокое покрытие: webhook, actions, api, send, monitor
 
-## MAX Bot API Reference
+## Справочник MAX Bot API
 
-| Method | Endpoint | Description |
+| Метод | Endpoint | Описание |
 |--------|----------|-------------|
-| GET    | `/me` | Bot info |
-| POST   | `/messages` | Send message |
-| PUT    | `/messages` | Edit message |
-| DELETE | `/messages` | Delete message |
+| GET    | `/me` | Информация о боте |
+| POST   | `/messages` | Отправить сообщение |
+| PUT    | `/messages` | Редактировать сообщение |
+| DELETE | `/messages` | Удалить сообщение |
 | GET    | `/updates` | Long polling |
-| POST   | `/subscriptions` | Subscribe webhook |
-| GET    | `/chats` | List chats |
-| POST   | `/actions` | Send action (typing, mark_seen) |
+| POST   | `/subscriptions` | Подписаться на webhook |
+| GET    | `/chats` | Список чатов |
+| POST   | `/actions` | Отправить действие (typing, mark_seen) |
 
-Base URL: `https://platform-api.max.ru`
-Auth: `Authorization: <token>` header
+Базовый URL: `https://platform-api.max.ru`
+Авторизация: заголовок `Authorization: <token>`
 Rate limit: 30 rps
 
-## Update Types
+## Типы обновлений
 
-| Type | Description | Supported |
+| Тип | Описание | Поддержка |
 |------|-------------|-----------|
-| `message_created` | New message | ✅ |
-| `message_callback` | Inline keyboard button pressed | ✅ |
-| `message_edited` | Message edited | ✅ |
-| `message_removed` | Message deleted | ✅ |
-| `bot_started` | User sent /start | ✅ |
-| `bot_added` | Bot added to chat | ✅ |
-| `bot_removed` | Bot removed from chat | ✅ |
-| `user_added` | User joined chat | ⚠️ (logged) |
-| `user_removed` | User left chat | ⚠️ (logged) |
-| `chat_title_changed` | Chat title changed | ⚠️ (logged) |
-| `message_reaction_*` | Reactions | ❌ (not sent to bots) |
+| `message_created` | Новое сообщение | ✅ |
+| `message_callback` | Нажата кнопка inline-клавиатуры | ✅ |
+| `message_edited` | Сообщение отредактировано | ✅ |
+| `message_removed` | Сообщение удалено | ✅ |
+| `bot_started` | Пользователь отправил /start | ✅ |
+| `bot_added` | Бот добавлен в чат | ✅ |
+| `bot_removed` | Бот удалён из чата | ✅ |
+| `user_added` | Пользователь вошёл в чат | ⚠️ (логируется) |
+| `user_removed` | Пользователь покинул чат | ⚠️ (логируется) |
+| `chat_title_changed` | Название чата изменено | ⚠️ (логируется) |
+| `message_reaction_*` | Реакции | ❌ (не отправляются ботам) |
 
-## Known Issues & Workarounds
+## Известные проблемы и обходы
 
-### Edited Messages Without Text
-MAX's `message_edited` webhook may not include the edited text. The plugin automatically fetches the full message from the API if text is missing.
+### Отредактированные сообщения без текста
+Webhook `message_edited` в MAX может не включать отредактированный текст. Плагин автоматически запрашивает полное сообщение из API, если текст отсутствует.
 
-### Reply-as-Mention Behavior
-In groups with `requireMention: true`, replying to the bot's message counts as a mention (similar to Telegram behavior). This ensures natural conversation flow.
+### Поведение ответа как упоминания
+В группах с `requireMention: true` ответ на сообщение бота считается упоминанием (аналогично поведению Telegram). Это обеспечивает естественный поток разговора.
 
-### Media Size Limits
-MAX enforces platform-level media size limits. The plugin respects the configured `mediaMaxMb` setting (default 20MB) for both uploads and downloads.
+### Лимиты размера медиа
+MAX применяет платформенные ограничения на размер медиа. Плагин соблюдает настроенный параметр `mediaMaxMb` (по умолчанию 20МБ) для загрузки и скачивания.
 
-## License
+## Лицензия
 
 MIT
+
+---
+
+[English version →](./README.en.md)
