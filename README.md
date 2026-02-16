@@ -98,29 +98,6 @@ A test bot is available for development:
 - **Bot:** max-claw (@id781434402709_3_bot)
 - **Purpose:** Testing openclaw-max plugin features
 
-## Quick Install
-
-**One-liner** (clone + add to OpenClaw config):
-
-```bash
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max && openclaw channel add max
-```
-
-Or step by step:
-
-```bash
-# 1. Clone the plugin
-git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
-
-# 2. Add plugin path to OpenClaw config (~/.openclaw/openclaw.json)
-#    → plugins.load.paths: ["~/.openclaw/plugins/openclaw-max"]
-
-# 3. Run the interactive setup wizard
-openclaw channel add max
-```
-
-> **Note:** The plugin loads TypeScript directly via [jiti](https://github.com/unjs/jiti) — no build step required.
-
 ## Setup Guide
 
 ### 1. Create a MAX bot
