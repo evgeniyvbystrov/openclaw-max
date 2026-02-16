@@ -62,7 +62,7 @@ openclaw channel add max
 ### Media Support
 - ✅ **Media download** — incoming images, videos, audio, files, stickers
 - ✅ **Media upload** — outgoing images, videos, audio, files via MAX CDN
-- ✅ **Sticker support** — both incoming and outgoing stickers
+- ✅ **Sticker support** — incoming stickers (outbound stickers not supported by MAX Bot API)
 - ✅ **Location attachments** — location sharing support
 - ✅ **Contact attachments** — contact card support
 
