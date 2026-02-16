@@ -159,7 +159,11 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
 
     if (action === "sticker") {
       const to = readStringParam(params, "to") ?? readStringParam(params, "target", { required: true });
-      let stickerCode = readStringParam(params, "stickerId") ?? readStringParam(params, "fileId");
+      // stickerId may come as string or string[] from message tool schema
+      const rawStickerId = params.stickerId;
+      let stickerCode: string | undefined = Array.isArray(rawStickerId)
+        ? (rawStickerId[0] as string)?.trim()
+        : readStringParam(params, "stickerId") ?? readStringParam(params, "fileId");
       // Auto-fill from last received sticker if not provided
       if (!stickerCode) {
         stickerCode = getLastStickerCode(to) ?? getLastStickerCode() ?? undefined;
