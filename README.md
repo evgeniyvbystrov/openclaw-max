@@ -22,9 +22,13 @@ openclaw plugins install openclaw-max
 openclaw channel add max
 ```
 
-### git clone
+### git clone (альтернатива)
 
 ```bash
+# GitHub
+git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+
+# GitLab
 git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
 ```
 
@@ -44,32 +48,7 @@ git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.opencl
 openclaw channel add max
 ```
 
-### Пошаговая установка
-
-1. **Установите плагин:**
-   ```bash
-   openclaw plugins install openclaw-max
-   ```
-   
-   Или клонируйте:
-   ```bash
-   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
-   ```
-
-2. **Настройте канал:**
-   ```bash
-   openclaw channel add max
-   ```
-   
-   Визард запросит токен бота.
-
 **Где взять токен:** Откройте чат с [@MasterBot](https://max.ru/masterbot) в MAX, создайте бота и получите токен.
-
-**Альтернатива:** Токен через переменную окружения:
-```bash
-export MAX_BOT_TOKEN="your_token_here"
-openclaw channel add max --use-env
-```
 
 ## Возможности
 
@@ -383,6 +362,7 @@ MAX применяет платформенные ограничения на р
 ## Связь
 
 - **npm:** [npmjs.com/package/openclaw-max](https://www.npmjs.com/package/openclaw-max)
+- **GitHub:** [github.com/evgeniyvbystrov/openclaw-max](https://github.com/evgeniyvbystrov/openclaw-max)
 - **GitLab:** [gitlab.byse.tech/tapchik/prototypes/openclaw-max](https://gitlab.byse.tech/tapchik/prototypes/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX для разработчиков:** [dev.max.ru](https://dev.max.ru)

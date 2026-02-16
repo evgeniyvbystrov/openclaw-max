@@ -18,9 +18,13 @@ openclaw plugins install openclaw-max
 openclaw channel add max
 ```
 
-### git clone
+### git clone (alternative)
 
 ```bash
+# GitHub
+git clone https://github.com/evgeniyvbystrov/openclaw-max.git ~/.openclaw/plugins/openclaw-max
+
+# GitLab
 git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
 ```
 
@@ -40,32 +44,7 @@ And configure the channel:
 openclaw channel add max
 ```
 
-### Step-by-step
-
-1. **Install the plugin:**
-   ```bash
-   openclaw plugins install openclaw-max
-   ```
-   
-   Or clone:
-   ```bash
-   git clone https://gitlab.byse.tech/tapchik/prototypes/openclaw-max.git ~/.openclaw/plugins/openclaw-max
-   ```
-
-2. **Configure the channel:**
-   ```bash
-   openclaw channel add max
-   ```
-   
-   Follow the interactive wizard to set your bot token.
-
 **Where to get the token:** Open a chat with [@MasterBot](https://max.ru/masterbot) in MAX, create a bot and get the token.
-
-**Alternative:** Set bot token via environment variable:
-```bash
-export MAX_BOT_TOKEN="your_token_here"
-openclaw channel add max --use-env
-```
 
 ## Features
 
@@ -369,6 +348,7 @@ MAX enforces platform-level media size limits. The plugin respects the configure
 ## Links
 
 - **npm:** [npmjs.com/package/openclaw-max](https://www.npmjs.com/package/openclaw-max)
+- **GitHub:** [github.com/evgeniyvbystrov/openclaw-max](https://github.com/evgeniyvbystrov/openclaw-max)
 - **GitLab:** [gitlab.byse.tech/tapchik/prototypes/openclaw-max](https://gitlab.byse.tech/tapchik/prototypes/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX for developers:** [dev.max.ru](https://dev.max.ru)
