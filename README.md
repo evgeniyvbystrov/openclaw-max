@@ -358,6 +358,7 @@ MAX применяет платформенные ограничения на р
 - **GitHub:** [github.com/evgeniyvbystrov/openclaw-max](https://github.com/evgeniyvbystrov/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX для разработчиков:** [dev.max.ru](https://dev.max.ru)
+- **Каталог стикеров MAX:** [listmax.ru](https://listmax.ru) — источник каталога стикеров
 
 ## Лицензия
 
