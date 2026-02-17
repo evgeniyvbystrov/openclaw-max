@@ -344,6 +344,7 @@ MAX enforces platform-level media size limits. The plugin respects the configure
 - **GitHub:** [github.com/evgeniyvbystrov/openclaw-max](https://github.com/evgeniyvbystrov/openclaw-max)
 - **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **MAX for developers:** [dev.max.ru](https://dev.max.ru)
+- **MAX sticker catalog:** [listmax.ru](https://listmax.ru) — sticker catalog source
 
 ## License
 
