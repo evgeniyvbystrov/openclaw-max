@@ -70,6 +70,11 @@ openclaw channel add max
 - ✅ **Reply-as-mention** — replying to bot's message counts as mention
 - ✅ **Group policy** — `open`, `allowlist`, or `disabled` group access
 
+### Response Streaming
+- ✅ **Partial streaming** — edit-streaming: message updates in-place as it's generated (like Telegram)
+- ✅ **Block streaming** — each text block sent as a separate message
+- ✅ **`streamMode` config** — `off` (default), `partial`, `block`
+
 ### User Experience
 - ✅ **Typing indicators** — automatic `typing_on` when processing messages
 - ✅ **Read receipts** — automatic `mark_seen` for all received messages

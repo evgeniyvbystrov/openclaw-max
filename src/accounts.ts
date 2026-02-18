@@ -19,6 +19,7 @@ export interface MaxAccountConfig {
   webhookSecret?: string;
   webhookPath?: string;
   mediaMaxMb?: number;
+  streamMode?: "off" | "partial" | "block";
 }
 
 export interface ResolvedMaxAccount {
@@ -107,6 +108,7 @@ export function resolveMaxAccount(params: {
       webhookSecret: section.webhookSecret as string | undefined,
       webhookPath: section.webhookPath as string | undefined,
       mediaMaxMb: section.mediaMaxMb as number | undefined,
+      streamMode: section.streamMode as MaxAccountConfig["streamMode"],
     };
 
     if (accountConfig.botToken?.trim()) {
@@ -132,6 +134,7 @@ export function resolveMaxAccount(params: {
       webhookSecret: raw.webhookSecret as string | undefined,
       webhookPath: raw.webhookPath as string | undefined,
       mediaMaxMb: raw.mediaMaxMb as number | undefined,
+      streamMode: raw.streamMode as MaxAccountConfig["streamMode"],
     };
 
     if (accountConfig.botToken?.trim()) {

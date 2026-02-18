@@ -50,6 +50,7 @@ export const MaxAccountSchemaBase = z
     dms: z.record(z.string(), DmConfigSchema.optional()).optional(),
     textChunkLimit: z.number().int().positive().optional(),
     blockStreaming: z.boolean().optional(),
+    streamMode: z.enum(["off", "partial", "block"]).optional(),
     blockStreamingCoalesce: BlockStreamingCoalesceSchema.optional(),
     responsePrefix: z.string().optional(),
     mediaMaxMb: z.number().positive().optional(),
