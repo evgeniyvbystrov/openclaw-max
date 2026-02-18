@@ -1,6 +1,6 @@
 {
   "name": "openclaw-max",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "OpenClaw channel plugin for MAX messenger (max.ru)",
   "type": "module",
   "main": "dist/index.js",

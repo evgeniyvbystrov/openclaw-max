@@ -9,7 +9,7 @@ import type { ChannelLogSink, OpenClawConfig } from "openclaw/plugin-sdk";
 import { createReplyPrefixOptions } from "openclaw/plugin-sdk";
 import { MaxApi, type MaxUpdate, type MaxMessage, type MaxUser, type MaxCallback } from "./api.js";
 import { resolveMaxAccount, type ResolvedMaxAccount } from "./accounts.js";
-import { sendMaxMessage, sendMaxMediaMessage } from "./send.js";
+import { sendMaxMessage, sendMaxMediaMessage, editMaxMessage } from "./send.js";
 import { getMaxRuntime } from "./runtime.js";
 import { rememberStickerCode } from "./sticker-cache.js";
 import {
@@ -573,14 +573,116 @@ export async function processIncomingMessage(
     });
   }
 
+  // Streaming modes: "partial" = edit single message, "block" = each block as separate message
+  const streamMode = account.config.streamMode ?? "off";
+  const useEditStreaming = streamMode === "partial";
+  const useBlockStreaming = streamMode === "block";
+  const replyMid = messageId.replace(/_edited_\d+$/, "");
+
+  // Draft stream for edit-streaming (like Telegram's partial reply approach)
+  let draftMid: string | null = null;
+  let draftLastText = "";
+  let draftLastEditAt = 0;
+  let draftTimer: ReturnType<typeof setTimeout> | null = null;
+  let draftStopped = false;
+  const DRAFT_THROTTLE_MS = 1200;
+  const DRAFT_MAX_CHARS = 4000;
+  const DRAFT_MIN_CHARS = 30; // Don't send until we have enough text
+
+  const draftUpdate = async (text: string) => {
+    if (draftStopped || !text) return;
+    const trimmed = text.trimEnd();
+    if (!trimmed || trimmed === draftLastText) return;
+    if (trimmed.length > DRAFT_MAX_CHARS) {
+      draftStopped = true;
+      return;
+    }
+    if (!draftMid && trimmed.length < DRAFT_MIN_CHARS) return; // wait for more text
+
+    // Clear pending timer
+    if (draftTimer) { clearTimeout(draftTimer); draftTimer = null; }
+
+    const now = Date.now();
+    const elapsed = now - draftLastEditAt;
+    if (elapsed < DRAFT_THROTTLE_MS) {
+      // Schedule a deferred update
+      draftTimer = setTimeout(() => { draftUpdate(text); }, DRAFT_THROTTLE_MS - elapsed);
+      return;
+    }
+
+    draftLastText = trimmed;
+    draftLastEditAt = now;
+
+    try {
+      if (!draftMid) {
+        // First chunk — send new message
+        const res = await sendMaxMessage(chatIdStr, trimmed, {
+          token: account.token,
+          replyToMessageId: replyMid,
+          format: "markdown",
+        });
+        draftMid = res.messageId || null;
+        statusSink?.({ lastOutboundAt: Date.now() });
+      } else {
+        // Edit existing message
+        await editMaxMessage(draftMid, trimmed, {
+          token: account.token,
+          format: "markdown",
+        });
+      }
+    } catch (err) {
+      draftStopped = true;
+      log?.debug?.(`[${account.accountId}] MAX draft stream failed: ${String(err)}`);
+    }
+  };
+
+  const draftFlush = async () => {
+    if (draftTimer) { clearTimeout(draftTimer); draftTimer = null; }
+    if (!draftLastText) return;
+    // no-op if nothing changed
+  };
+
+  const draftClear = async () => {
+    if (draftTimer) { clearTimeout(draftTimer); draftTimer = null; }
+    draftStopped = true;
+  };
+
   await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
     ctx: ctxPayload,
     cfg: config,
     dispatcherOptions: {
       ...prefixOptions,
       deliver: async (payload) => {
-        // Strip _edited_<timestamp> suffix — MAX API only knows original mids
-        const replyMid = messageId.replace(/_edited_\d+$/, "");
+        if (useEditStreaming && draftMid && payload.text) {
+          // Final delivery replaces the draft message with final text
+          const finalText = payload.text;
+          if (finalText !== draftLastText) {
+            try {
+              await editMaxMessage(draftMid, finalText, {
+                token: account.token,
+                format: "markdown",
+              });
+              draftLastText = finalText;
+            } catch (_) { /* best effort */ }
+          }
+          draftStopped = true;
+
+          // Handle media if present
+          if (payload.mediaUrls?.length || payload.mediaUrl) {
+            await deliverMaxReply({
+              payload: { ...payload, text: undefined },
+              account,
+              chatId: chatIdStr,
+              replyToId: replyMid,
+              config,
+              log,
+              statusSink,
+            });
+          }
+          return;
+        }
+
+        // Non-streaming path or no draft yet
         await deliverMaxReply({
           payload,
           account,
@@ -597,8 +699,17 @@ export async function processIncomingMessage(
     },
     replyOptions: {
       onModelSelected,
+      ...(useEditStreaming ? {
+        onPartialReply: (payload: { text?: string }) => {
+          if (payload.text) draftUpdate(payload.text);
+        },
+      } : {}),
+      ...(useBlockStreaming ? { disableBlockStreaming: false } : {}),
     },
   });
+
+  // Cleanup draft stream
+  await draftClear();
 }
 
 async function processCallback(

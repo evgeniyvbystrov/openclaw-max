@@ -145,7 +145,7 @@ export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
     threads: false,
     media: true,
     nativeCommands: true,
-    blockStreaming: true,
+    blockStreaming: false,
     edit: true,
     polls: false,
   },
