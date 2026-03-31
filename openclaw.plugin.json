@@ -1,5 +1,5 @@
 {
-  "id": "max",
+  "id": "openclaw-max",
   "name": "MAX Messenger",
   "description": "Channel plugin for MAX messenger (max.ru)",
   "channels": ["max"],

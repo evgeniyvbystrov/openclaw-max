@@ -3,8 +3,9 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { OpenClawConfig } from "openclaw/plugin-sdk";
-import { readJsonBodyWithLimit, requestBodyErrorToText } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
+import { readJsonBodyWithLimit } from "openclaw/plugin-sdk/infra-runtime";
+import { requestBodyErrorToText } from "openclaw/plugin-sdk/webhook-ingress";
 import type { MaxUpdate } from "./api.js";
 import type { ResolvedMaxAccount } from "./accounts.js";
 import { MaxApi } from "./api.js";

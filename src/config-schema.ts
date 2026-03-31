@@ -3,15 +3,45 @@
  */
 
 import {
-  BlockStreamingCoalesceSchema,
-  DmConfigSchema,
   DmPolicySchema,
   GroupPolicySchema,
   MarkdownConfigSchema,
   ToolPolicySchema,
-  requireOpenAllowFrom,
-} from "openclaw/plugin-sdk";
+} from "openclaw/plugin-sdk/channel-config-schema";
 import { z } from "zod";
+
+// These schemas were removed from the public plugin-sdk surface in OpenClaw 2026.3.x.
+// Inlined here to stay compatible with both old and new runtimes.
+const BlockStreamingCoalesceSchema = z
+  .object({
+    minChars: z.number().int().optional(),
+    maxChars: z.number().int().optional(),
+    idleMs: z.number().int().optional(),
+  })
+  .strict();
+
+const DmConfigSchema = z
+  .object({
+    historyLimit: z.number().int().min(0).optional(),
+  })
+  .strict();
+
+function requireOpenAllowFrom(params: {
+  policy: string | undefined;
+  allowFrom: unknown[] | undefined;
+  ctx: z.RefinementCtx;
+  path: (string | number)[];
+  message: string;
+}): void {
+  if (params.policy !== "open") return;
+  const normalized = (params.allowFrom ?? []).map(String);
+  if (normalized.includes("*")) return;
+  params.ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: params.path,
+    message: params.message,
+  });
+}
 
 /**
  * Per-group config for MAX chats

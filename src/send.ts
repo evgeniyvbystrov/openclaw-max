@@ -11,7 +11,7 @@ import {
   type MaxAttachment,
 } from "./api.js";
 import { resolveMaxAccount } from "./accounts.js";
-import type { OpenClawConfig } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 
 export interface MaxSendOptions {
   token?: string;

@@ -2,8 +2,8 @@
  * MAX account resolution — reads config and produces a resolved account object.
  */
 
-import type { OpenClawConfig } from "openclaw/plugin-sdk";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk/core";
 
 export interface MaxAccountConfig {
   enabled?: boolean;
