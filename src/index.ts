@@ -4,8 +4,8 @@
  * Entry point: registers the MAX channel with the OpenClaw plugin system.
  */
 
-import type { ChannelPlugin, OpenClawPluginApi } from "openclaw/plugin-sdk";
-import { emptyPluginConfigSchema } from "openclaw/plugin-sdk";
+import type { ChannelPlugin, OpenClawPluginApi } from "openclaw/plugin-sdk/core";
+import { emptyPluginConfigSchema } from "openclaw/plugin-sdk/core";
 import { maxPlugin } from "./channel.js";
 import { setMaxRuntime } from "./runtime.js";
 
@@ -19,7 +19,7 @@ const plugin: {
   configSchema: ReturnType<typeof emptyPluginConfigSchema>;
   register(api: OpenClawPluginApi): void;
 } = {
-  id: "max",
+  id: "openclaw-max",
   name: "MAX Messenger",
   description: "MAX messenger channel plugin for OpenClaw",
   configSchema: emptyPluginConfigSchema(),
