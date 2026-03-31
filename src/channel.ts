@@ -4,27 +4,25 @@
  * Implements the ChannelPlugin interface to integrate MAX messenger.
  */
 
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type {
   ChannelPlugin,
-  ChannelAccountSnapshot,
   ChannelMeta,
-  OpenClawConfig,
-} from "openclaw/plugin-sdk";
+} from "openclaw/plugin-sdk/channel-runtime";
 import {
   DEFAULT_ACCOUNT_ID,
   normalizeAccountId,
-  emptyPluginConfigSchema,
   buildChannelConfigSchema,
   formatPairingApproveHint,
-  PAIRING_APPROVED_MESSAGE,
   setAccountEnabledInConfigSection,
   deleteAccountFromConfigSection,
   applyAccountNameToChannelSection,
   migrateBaseNameToDefaultAccount,
-  resolveToolsBySender,
-} from "openclaw/plugin-sdk";
+} from "openclaw/plugin-sdk/core";
+import { PAIRING_APPROVED_MESSAGE } from "openclaw/plugin-sdk/channel-status";
+import { resolveToolsBySender } from "openclaw/plugin-sdk/channel-policy";
 
-import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk";
+import type { GroupToolPolicyConfig } from "openclaw/plugin-sdk/channel-policy";
 
 import {
   listMaxAccountIds,
@@ -36,7 +34,7 @@ import { MaxApi, type MaxUser } from "./api.js";
 import { sendMaxMessage, sendMaxMediaMessage } from "./send.js";
 import { startMaxPolling } from "./monitor.js";
 import { getMaxRuntime } from "./runtime.js";
-import { maxOnboardingAdapter } from "./onboarding.js";
+import { maxSetupWizard } from "./onboarding.js";
 import { MaxConfigSchema } from "./config-schema.js";
 import { maxMessageActions } from "./actions.js";
 
@@ -136,7 +134,7 @@ const maxMeta: ChannelMeta = {
 export const maxPlugin: ChannelPlugin<ResolvedMaxAccount> = {
   id: "max",
   meta: maxMeta,
-  onboarding: maxOnboardingAdapter,
+  setupWizard: maxSetupWizard,
   configSchema: buildChannelConfigSchema(MaxConfigSchema),
 
   capabilities: {

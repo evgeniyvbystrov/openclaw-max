@@ -2,16 +2,15 @@
  * MAX channel message actions adapter — implements message tool actions
  */
 
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type {
   ChannelMessageActionAdapter,
   ChannelMessageActionName,
-  OpenClawConfig,
-} from "openclaw/plugin-sdk";
-import {
-  createActionGate,
-  jsonResult,
-  readStringParam,
-} from "openclaw/plugin-sdk";
+  ChannelMessageActionContext,
+  ChannelMessageActionDiscoveryContext,
+} from "openclaw/plugin-sdk/channel-runtime";
+import { createActionGate, jsonResult } from "openclaw/plugin-sdk/agent-runtime";
+import { readStringParam } from "openclaw/plugin-sdk/param-readers";
 import { listMaxAccountIds, resolveMaxAccount } from "./accounts.js";
 import { getLastStickerCode } from "./sticker-cache.js";
 import { sendMaxMessage, editMaxMessage, deleteMaxMessage, sendMaxMediaMessage, sendMaxSticker, sendMaxContact, sendMaxLocation } from "./send.js";
@@ -26,23 +25,18 @@ function listEnabledAccounts(cfg: OpenClawConfig) {
 }
 
 export const maxMessageActions: ChannelMessageActionAdapter = {
-  listActions: ({ cfg }) => {
+  describeMessageTool: ({ cfg }: ChannelMessageActionDiscoveryContext) => {
     const accounts = listEnabledAccounts(cfg);
     if (accounts.length === 0) {
-      return [];
+      return null;
     }
-    const actions = new Set<ChannelMessageActionName>([]);
-    actions.add("send");
-    actions.add("edit");
-    actions.add("delete");
-    actions.add("sticker");
-    actions.add("sendAttachment");
-    return Array.from(actions);
+    return {
+      actions: ["send", "edit", "delete", "sticker", "sendAttachment"],
+      capabilities: ["buttons"],
+    };
   },
 
-  supportsButtons: () => true,
-
-  extractToolSend: ({ args }) => {
+  extractToolSend: ({ args }: { args: Record<string, unknown> }) => {
     // Extract routing info for ALL actions (send, edit, delete, sticker)
     // Core uses extractToolSend for routing all message tool actions to plugin
     let to = typeof args.target === "string" ? args.target : undefined;
@@ -60,7 +54,7 @@ export const maxMessageActions: ChannelMessageActionAdapter = {
     return { to, accountId };
   },
 
-  handleAction: async ({ action, params, cfg, accountId }) => {
+  handleAction: async ({ action, params, cfg, accountId }: ChannelMessageActionContext) => {
     const account = resolveMaxAccount({
       cfg,
       accountId,

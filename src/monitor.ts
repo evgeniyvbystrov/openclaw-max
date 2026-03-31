@@ -5,8 +5,9 @@
  * finalizeInboundContext → dispatchReplyWithBufferedBlockDispatcher
  */
 
-import type { ChannelLogSink, OpenClawConfig } from "openclaw/plugin-sdk";
-import { createReplyPrefixOptions } from "openclaw/plugin-sdk";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
+import type { ChannelLogSink } from "openclaw/plugin-sdk/channel-runtime";
+import { createReplyPrefixOptions } from "openclaw/plugin-sdk/channel-runtime";
 import { MaxApi, type MaxUpdate, type MaxMessage, type MaxUser, type MaxCallback } from "./api.js";
 import { resolveMaxAccount, type ResolvedMaxAccount } from "./accounts.js";
 import { sendMaxMessage, sendMaxMediaMessage, editMaxMessage } from "./send.js";
@@ -407,7 +408,7 @@ export async function processIncomingMessage(
 
     if (dmPolicy !== "open") {
       const configAllowFrom = (account.config.allowFrom ?? []).map(String);
-      const storeAllowFrom = await core.channel.pairing.readAllowFromStore("max").catch(() => []);
+      const storeAllowFrom = await core.channel.pairing.readAllowFromStore({ channel: "max", accountId: account.accountId }).catch(() => []);
       const effectiveAllowFrom = [...configAllowFrom, ...storeAllowFrom];
 
       const senderStr = String(senderId);
@@ -418,6 +419,7 @@ export async function processIncomingMessage(
           const { code, created } = await core.channel.pairing.upsertPairingRequest({
             channel: "max",
             id: senderStr,
+            accountId: account.accountId,
             meta: { name: senderName },
           });
           if (created) {

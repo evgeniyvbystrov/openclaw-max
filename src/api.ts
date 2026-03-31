@@ -437,7 +437,7 @@ export class MaxApi {
     }
 
     // Step 3: POST file as multipart/form-data to upload URL
-    const blob = new Blob([fileBuffer], { type: mimeType });
+    const blob = new Blob([new Uint8Array(fileBuffer)], { type: mimeType });
     const formData = new FormData();
     formData.append("data", blob, fileName);
 
